@@ -84,8 +84,24 @@
                 </div>
 
                 <!-- Nanti kita tambahkan tabel data siswa di sini -->
-                <div id="tabel-siswa-wrapper">
-                    <p style="color: #94a3b8; font-style: italic;">Daftar siswa akan ditampilkan di sini...</p>
+                <!-- Tabel Menampilkan Daftar Siswa -->
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 50px; text-align: center;">No</th>
+                                <th>NIS</th>
+                                <th>Nama Lengkap</th>
+                                <th>Kelas</th>
+                                <th>Nomor WA</th>
+                                <th style="width: 80px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel-data-siswa">
+                            <!-- Data siswa akan dimuat di sini oleh Javascript -->
+                            <tr><td colspan="6" style="text-align:center; color:#64748b;">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
