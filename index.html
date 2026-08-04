@@ -79,6 +79,18 @@
                     <button class="btn-biru" onclick="muatDataTagihan('BELUM_BAYAR')" style="margin-top: 0; width: auto; padding: 10px 20px; border-radius: 6px;">Lihat Tunggakan</button>
                     <button class="btn-biru" onclick="muatDataTagihan('LUNAS')" style="margin-top: 0; width: auto; padding: 10px 20px; background-color: #8b5cf6; border-radius: 6px; margin-left: 10px;">Lihat Sudah Lunas</button>
                 </div>
+                
+                <!-- Kotak Filter & Pencarian Tagihan -->
+                <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                    <input type="text" id="cari-tagihan" placeholder="🔍 Cari nama siswa..." onkeyup="filterTabelTagihan()" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; width: 250px; margin: 0;">
+                    <select id="filter-kelas-tagihan" onchange="filterTabelTagihan()" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; margin: 0;">
+                        <option value="">Semua Kelas</option>
+                        <option value="5-A">Kelas 5-A</option>
+                        <option value="5-B">Kelas 5-B</option>
+                        <!-- Tambahkan opsi kelas lainnya sesuai kebutuhan -->
+                    </select>
+                </div>
+                
                 <!-- HALAMAN 3: DATA SISWA (KHUSUS ADMIN) -->
             <div id="page-siswa" class="halaman">
                 <h2 style="margin-top: 0;">Manajemen Data Siswa</h2>
@@ -96,8 +108,12 @@
                         <button onclick="document.getElementById('file-csv').click()" style="background-color: #10b981; width: auto; padding: 8px 15px; font-size: 14px;">⬆️ Unggah File CSV</button>
                     </div>
                 </div>
-
-                <!-- Nanti kita tambahkan tabel data siswa di sini -->
+                
+                <!-- Kotak Pencarian Siswa -->
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="cari-siswa" placeholder="🔍 Cari nama atau NIS siswa..." onkeyup="filterTabelSiswa()" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; width: 300px; margin: 0;">
+                </div>
+                
                 <!-- Tabel Menampilkan Daftar Siswa -->
                 <div style="overflow-x: auto;">
                     <table>
