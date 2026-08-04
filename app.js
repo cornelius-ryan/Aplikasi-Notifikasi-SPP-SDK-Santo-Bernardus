@@ -211,10 +211,18 @@ function bukaMenu(idHalaman) {
     // 3. Ubah warna tombol menu di sidebar agar terlihat sedang aktif
     document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('menu-aktif'));
     
-    // Cari tombol yang memanggil fungsi ini, lalu beri warna biru
-    if (idHalaman === 'page-home') document.getElementById('btn-menu-home').classList.add('menu-aktif');
-    if (idHalaman === 'page-tagihan') document.getElementById('btn-menu-tagihan').classList.add('menu-aktif');
-    if (idHalaman === 'page-siswa') document.getElementById('btn-menu-siswa').classList.add('menu-aktif');
+// Cari tombol yang memanggil fungsi ini, lalu beri warna biru dan muat datanya
+    if (idHalaman === 'page-home') {
+        document.getElementById('btn-menu-home').classList.add('menu-aktif');
+    }
+    if (idHalaman === 'page-tagihan') {
+        document.getElementById('btn-menu-tagihan').classList.add('menu-aktif');
+        muatDataTagihan('BELUM_BAYAR');
+    }
+    if (idHalaman === 'page-siswa') {
+        document.getElementById('btn-menu-siswa').classList.add('menu-aktif');
+        muatDataSiswa(); // <--- TAMBAHKAN BARIS INI
+    }
 }
 
 // ==========================================
@@ -278,7 +286,12 @@ async function uploadCSV(event) {
                     alert("Gagal mengimpor data: " + error.message);
                 } else {
                     alert("Berhasil mengimpor seluruh data siswa!");
-                    // Nanti kita panggil fungsi refresh tabel siswa di sini
+                    if (error) {
+                    alert("Gagal mengimpor data: " + error.message);
+                } else {
+                    alert("Berhasil mengimpor seluruh data siswa!");
+                    muatDataSiswa(); // <--- TAMBAHKAN BARIS INI (Refresh tabel otomatis)
+                }
                 }
             }
         } else {
@@ -288,4 +301,53 @@ async function uploadCSV(event) {
         event.target.value = ''; // Reset input file agar bisa upload file yang sama lagi jika perlu
     };
     reader.readAsText(file);
+}
+
+// 3. Fungsi Menampilkan Data Siswa ke Tabel
+async function muatDataSiswa() {
+    // Tarik data siswa, urutkan berdasarkan kelas, lalu nama abjad
+    const { data, error } = await db.from('siswa')
+        .select('*')
+        .order('kode_kelas', { ascending: true })
+        .order('nama', { ascending: true });
+
+    const tbody = document.getElementById('tabel-data-siswa');
+    tbody.innerHTML = '';
+
+    if (error) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Gagal memuat data: ${error.message}</td></tr>`;
+        return;
+    }
+
+    if (data && data.length > 0) {
+        data.forEach((s, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td style="text-align: center;">${index + 1}</td>
+                    <td>${s.nis}</td>
+                    <td>${s.nama}</td>
+                    <td>${s.kode_kelas}</td>
+                    <td>${s.no_wa_ortu}</td>
+                    <td>
+                        <button onclick="hapusSiswa('${s.id}')" style="background-color: #ef4444; color: white; padding: 6px 10px; font-size: 12px; margin: 0; border-radius: 4px; border: none;">Hapus</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } else {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#64748b;">Belum ada data siswa. Silakan unggah CSV.</td></tr>`;
+    }
+}
+
+// 4. Fungsi Hapus Data Siswa Tunggal
+async function hapusSiswa(idSiswa) {
+    if (!confirm("Yakin ingin menghapus siswa ini? Seluruh riwayat tagihannya juga akan ikut terhapus!")) return;
+
+    const { error } = await db.from('siswa').delete().eq('id', idSiswa);
+
+    if (error) {
+        alert("Gagal menghapus siswa: " + error.message);
+    } else {
+        muatDataSiswa(); // Refresh tabel setelah berhasil dihapus
+    }
 }
