@@ -392,7 +392,7 @@ function uploadCSV(event) {
 }
 
 // ==========================================
-// 7. MODUL GURU & FILTER DATA
+// 7. MODUL GURU & HAK AKSES
 // ==========================================
 async function muatDataGuru() {
     const { data, error } = await db.from('profiles').select('*').order('nama');
@@ -400,50 +400,72 @@ async function muatDataGuru() {
     if(!tbody) return;
     tbody.innerHTML = '';
 
-    if (error) return tbody.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Error: ${error.message}</td></tr>`;
+    if (error) return tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">Error: ${error.message}</td></tr>`;
     
     data.forEach((g, idx) => {
         let badge = g.role === 'admin' 
             ? `<span style="background: #ef4444; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">ADMIN</span>`
             : `<span style="background: #3b82f6; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">WALI KELAS</span>`;
         
+        let kelasBadge = g.kode_kelas 
+            ? `<span class="badge-role" style="background:#e2e8f0; color:#475569;">${g.kode_kelas}</span>` 
+            : `<span style="color:#94a3b8; font-size: 12px;">Tidak Ada</span>`;
+            
         tbody.innerHTML += `
             <tr>
                 <td class="col-center">${idx + 1}</td>
                 <td style="font-weight: 500;">${g.nama || '-'}</td>
                 <td>${g.email || '-'}</td>
                 <td>${badge}</td>
-                <td><span style="color: #10b981; font-size: 13px; font-weight: bold;">Aktif ✓</span></td>
+                <td>${kelasBadge}</td>
+                <td>
+                    <button onclick="bukaFormEditGuru('${g.id}', '${g.email || ''}', '${g.nama || ''}', '${g.role}', '${g.kode_kelas || ''}')" class="btn-primary" style="padding: 5px 15px; font-size: 12px;">Edit</button>
+                </td>
             </tr>
         `;
     });
 }
 
-function filterTabelTagihan() {
-    const keyword = document.getElementById('cari-tagihan').value.toLowerCase();
-    const kelasPilihan = document.getElementById('filter-kelas-tagihan').value;
-    const rows = document.querySelectorAll('#tabel-tunggakan tr');
+function bukaFormEditGuru(id, email, nama, role, kelas) {
+    document.getElementById('edit-id-guru').value = id;
+    document.getElementById('edit-email-guru').value = email;
+    document.getElementById('edit-nama-guru').value = nama;
+    document.getElementById('edit-role-guru').value = role;
+    document.getElementById('edit-kelas-guru').value = kelas;
     
-    rows.forEach(row => {
-        if (row.cells.length < 3) return;
-        const namaSiswa = row.cells[1].innerText.toLowerCase();
-        const kelasSiswa = row.cells[2].innerText;
-        const cocokNama = namaSiswa.includes(keyword);
-        const cocokKelas = (kelasPilihan === "" || kelasSiswa === kelasPilihan);
-        
-        row.style.display = (cocokNama && cocokKelas) ? "" : "none";
-    });
+    document.getElementById('form-edit-guru-container').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function filterTabelSiswa() {
-    const keyword = document.getElementById('cari-siswa').value.toLowerCase();
-    const rows = document.querySelectorAll('#tabel-data-siswa tr');
+function tutupFormEditGuru() { 
+    document.getElementById('form-edit-guru-container').style.display = 'none'; 
+}
+
+async function simpanPerubahanGuru() {
+    const id = document.getElementById('edit-id-guru').value;
+    const updateData = { 
+        nama: document.getElementById('edit-nama-guru').value, 
+        role: document.getElementById('edit-role-guru').value, 
+        kode_kelas: document.getElementById('edit-kelas-guru').value 
+    };
     
-    rows.forEach(row => {
-        if (row.cells.length < 3) return;
-        const nisSiswa = row.cells[1].innerText.toLowerCase();
-        const namaSiswa = row.cells[2].innerText.toLowerCase();
-        
-        row.style.display = (nisSiswa.includes(keyword) || namaSiswa.includes(keyword)) ? "" : "none";
-    });
+    // Validasi: Jika ia guru/wali kelas, wajib punya kelas!
+    if (updateData.role === 'guru' && !updateData.kode_kelas) {
+        return alert("Wali Kelas wajib memiliki isi di kolom 'Kelas yang Diampu' (misal: 5-A)!");
+    }
+    
+    // Jika jadi admin, biasanya tidak pegang kelas tertentu
+    if (updateData.role === 'admin' && updateData.kode_kelas) {
+        let konfirm = confirm("Admin biasanya memiliki akses ke SEMUA kelas. Yakin ingin membatasi Admin ini di kelas " + updateData.kode_kelas + " saja?");
+        if(!konfirm) return;
+    }
+
+    const { error } = await db.from('profiles').update(updateData).eq('id', id);
+    if (error) {
+        alert("Error update profil guru: " + error.message);
+    } else { 
+        alert("Profil guru & hak akses berhasil diperbarui!"); 
+        tutupFormEditGuru(); 
+        muatDataGuru(); 
+    }
 }
