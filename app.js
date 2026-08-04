@@ -398,3 +398,47 @@ async function generateTagihanMassal() {
         muatDataTagihan('BELUM_BAYAR');
     }
 }
+
+// ==========================================
+// FUNGSI PENCARIAN & FILTER TABEL
+// ==========================================
+function filterTabelTagihan() {
+    const keyword = document.getElementById('cari-tagihan').value.toLowerCase();
+    const kelasPilihan = document.getElementById('filter-kelas-tagihan').value;
+    const rows = document.querySelectorAll('#tabel-tunggakan tr');
+
+    rows.forEach(row => {
+        // Lewati jika baris kosong / teks memuat data
+        if (row.cells.length < 3) return; 
+
+        const namaSiswa = row.cells[1].innerText.toLowerCase();
+        const kelasSiswa = row.cells[2].innerText;
+
+        const cocokNama = namaSiswa.includes(keyword);
+        const cocokKelas = (kelasPilihan === "" || kelasSiswa === kelasPilihan);
+
+        if (cocokNama && cocokKelas) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
+}
+
+function filterTabelSiswa() {
+    const keyword = document.getElementById('cari-siswa').value.toLowerCase();
+    const rows = document.querySelectorAll('#tabel-data-siswa tr');
+
+    rows.forEach(row => {
+        if (row.cells.length < 3) return;
+
+        const nisSiswa = row.cells[1].innerText.toLowerCase();
+        const namaSiswa = row.cells[2].innerText.toLowerCase();
+
+        if (nisSiswa.includes(keyword) || namaSiswa.includes(keyword)) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
+}
