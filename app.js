@@ -49,9 +49,16 @@ async function tampilkanDashboard(userId) {
     roleUserSaatIni = profil.role; 
 
     document.getElementById('nama-user').innerText = profil.nama;
-    document.getElementById('role-user').innerText = roleUserSaatIni.toUpperCase();
+    
+    // Sesuaikan warna teks Role di Sidebar berdasarkan jabatan
+    const roleText = roleUserSaatIni.replace('_', ' ').toUpperCase();
+    document.getElementById('role-user').innerText = roleText;
+    if (roleUserSaatIni === 'kepala_sekolah') {
+        document.getElementById('role-user').style.color = '#8b5cf6'; // Warna ungu elegan
+    }
 
-    if (roleUserSaatIni === 'admin') {
+    // Hak akses Menu Sidebar (Admin & Kepala Sekolah melihat menu yang sama)
+    if (roleUserSaatIni === 'admin' || roleUserSaatIni === 'kepala_sekolah') {
         document.getElementById('btn-menu-tagihan').style.display = 'block';
         document.getElementById('btn-menu-siswa').style.display = 'block';
         document.getElementById('btn-menu-guru').style.display = 'block';
@@ -84,8 +91,15 @@ async function bukaMenu(idHalaman) {
         const htmlCode = await response.text();
         kontenArea.innerHTML = htmlCode;
 
+        // === FITUR SAKTI: Hapus Semua Tombol Operasional Jika Role Kepala Sekolah ===
+        if (roleUserSaatIni === 'kepala_sekolah') {
+            const elemenOperasional = kontenArea.querySelectorAll('.panel-info, .panel-dashed, button[onclick="siapkanAntrean()"], #check-all');
+            elemenOperasional.forEach(el => el.style.display = 'none');
+        }
+
+        // Pemuat Data Sesuai Halaman
         if (idHalaman === 'page-home') {
-            if (roleUserSaatIni === 'admin') {
+            if (roleUserSaatIni === 'admin' || roleUserSaatIni === 'kepala_sekolah') {
                 document.getElementById('panel-statistik-admin').style.display = 'grid';
                 document.getElementById('panel-guru').style.display = 'none';
                 muatStatistikDashboard();
@@ -141,7 +155,6 @@ async function muatDaftarSiswaGuru() {
 // ==========================================
 async function muatDataTagihan(statusTarget = 'BELUM_BAYAR') {
     const { data, error } = await db.from('tagihan_spp')
-        // Menambahkan tanggal_bayar pada data yang ditarik
         .select(`id, bulan_tagihan, nominal, status, tanggal_bayar, siswa ( nama, kode_kelas, no_wa_ortu )`)
         .eq('status', statusTarget)
         .order('bulan_tagihan', { ascending: false });
@@ -149,21 +162,28 @@ async function muatDataTagihan(statusTarget = 'BELUM_BAYAR') {
     const tbody = document.getElementById('tabel-tunggakan');
     if(!tbody) return;
     tbody.innerHTML = '';
-    document.getElementById('check-all').disabled = (statusTarget === 'LUNAS');
+    
+    const checkAll = document.getElementById('check-all');
+    if(checkAll) checkAll.disabled = (statusTarget === 'LUNAS');
     
     if(data) {
         data.forEach(row => {
-            let tombolAksi = statusTarget === 'BELUM_BAYAR' 
-                ? `<button onclick="ubahStatusTagihan('${row.id}', 'LUNAS')" class="btn-hijau" style="padding: 6px 12px; font-size: 12px;">Tandai Lunas</button>`
-                : `<button onclick="ubahStatusTagihan('${row.id}', 'BELUM_BAYAR')" class="btn-merah" style="padding: 6px 12px; font-size: 12px;">Batal Lunas</button>`;
+            let tombolAksi = '-';
+            let kotakCentang = '';
             
-            let kotakCentang = statusTarget === 'BELUM_BAYAR'
-                ? `<input type="checkbox" class="chk-item" data-nama="${row.siswa.nama}" data-wa="${row.siswa.no_wa_ortu}" data-nominal="${row.nominal}" data-bulan="${row.bulan_tagihan}">`
-                : `<input type="checkbox" disabled>`;
-            
+            // Logika Keamanan: Tombol Aksi HANYA muncul untuk Admin
+            if (roleUserSaatIni === 'admin') {
+                tombolAksi = statusTarget === 'BELUM_BAYAR' 
+                    ? `<button onclick="ubahStatusTagihan('${row.id}', 'LUNAS')" class="btn-hijau" style="padding: 6px 12px; font-size: 12px;">Tandai Lunas</button>`
+                    : `<button onclick="ubahStatusTagihan('${row.id}', 'BELUM_BAYAR')" class="btn-merah" style="padding: 6px 12px; font-size: 12px;">Batal Lunas</button>`;
+                
+                kotakCentang = statusTarget === 'BELUM_BAYAR'
+                    ? `<input type="checkbox" class="chk-item" data-nama="${row.siswa.nama}" data-wa="${row.siswa.no_wa_ortu}" data-nominal="${row.nominal}" data-bulan="${row.bulan_tagihan}">`
+                    : `<input type="checkbox" disabled>`;
+            }
+
             let warnaBadge = statusTarget === 'LUNAS' ? '#10b981' : '#f59e0b';
             
-            // Logika format Tanggal Bayar
             let formatTanggal = '-';
             if (row.tanggal_bayar) {
                 const dateObj = new Date(row.tanggal_bayar);
@@ -177,7 +197,8 @@ async function muatDataTagihan(statusTarget = 'BELUM_BAYAR') {
                     <td><span class="badge-role" style="background:#e2e8f0; color:#475569;">${row.siswa.kode_kelas}</span></td>
                     <td>${row.bulan_tagihan}</td>
                     <td style="font-weight: 500;">Rp${row.nominal.toLocaleString('id-ID')}</td>
-                    <td><span style="color: #64748b; font-size: 13px;">${formatTanggal}</span></td> <td><span style="background-color: ${warnaBadge}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">${statusTarget}</span></td>
+                    <td><span style="color: #64748b; font-size: 13px;">${formatTanggal}</span></td>
+                    <td><span style="background-color: ${warnaBadge}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">${statusTarget}</span></td>
                     <td>${tombolAksi}</td>
                 </tr>
             `;
@@ -203,12 +224,8 @@ async function generateTagihanMassal() {
     }));
 
     const { error } = await db.from('tagihan_spp').insert(tagihanBaru);
-    if (error) {
-        alert("Gagal (mungkin tagihan bulan ini sudah pernah dibuat): " + error.message);
-    } else { 
-        alert(`Berhasil generate tagihan massal periode ${bulanTagihanLengkap}!`); 
-        muatDataTagihan('BELUM_BAYAR'); 
-    }
+    if (error) alert("Gagal (mungkin tagihan bulan ini sudah pernah dibuat): " + error.message);
+    else { alert(`Berhasil generate tagihan massal!`); muatDataTagihan('BELUM_BAYAR'); }
 }
 
 async function ubahStatusTagihan(idTagihan, statusBaru) {
@@ -293,6 +310,14 @@ async function muatDataSiswa() {
     if (!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Belum ada data siswa.</td></tr>`;
 
     data.forEach((s, idx) => {
+        let tombolAksi = '-';
+        if (roleUserSaatIni === 'admin') {
+            tombolAksi = `
+                <button onclick="bukaFormEdit('${s.id}', '${s.nis}', '${s.nama}', '${s.kode_kelas}', '${s.no_wa_ortu}', '${s.nominal_spp || 150000}')" class="btn-primary" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;">Edit</button>
+                <button onclick="hapusSiswa('${s.id}')" class="btn-merah" style="padding: 5px 10px; font-size: 12px;">Hapus</button>
+            `;
+        }
+
         tbody.innerHTML += `
             <tr>
                 <td class="col-center">${idx + 1}</td>
@@ -300,10 +325,7 @@ async function muatDataSiswa() {
                 <td style="font-weight: 500;">${s.nama}</td>
                 <td><span class="badge-role" style="background:#e2e8f0; color:#475569;">${s.kode_kelas}</span></td>
                 <td>${s.no_wa_ortu}</td>
-                <td>
-                    <button onclick="bukaFormEdit('${s.id}', '${s.nis}', '${s.nama}', '${s.kode_kelas}', '${s.no_wa_ortu}', '${s.nominal_spp || 150000}')" class="btn-primary" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;">Edit</button>
-                    <button onclick="hapusSiswa('${s.id}')" class="btn-merah" style="padding: 5px 10px; font-size: 12px;">Hapus</button>
-                </td>
+                <td>${tombolAksi}</td>
             </tr>
         `;
     });
@@ -315,7 +337,7 @@ function bukaFormEdit(id, nis, nama, kelas, wa, nominal) {
     document.getElementById('edit-nama').value = nama;
     document.getElementById('edit-kelas').value = kelas;
     document.getElementById('edit-wa').value = wa;
-    document.getElementById('edit-nominal').value = nominal; // Mengisi kolom input nominal
+    document.getElementById('edit-nominal').value = nominal; 
     document.getElementById('form-edit-container').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -326,13 +348,13 @@ function tutupFormEdit() {
 
 async function simpanPerubahanSiswa() {
     const id = document.getElementById('edit-id-siswa').value;
-    const nominalBaru = document.getElementById('edit-nominal').value; // Mengambil data nominal
+    const nominalBaru = document.getElementById('edit-nominal').value; 
 
     const updateData = { 
         nama: document.getElementById('edit-nama').value, 
         kode_kelas: document.getElementById('edit-kelas').value, 
         no_wa_ortu: document.getElementById('edit-wa').value,
-        nominal_spp: nominalBaru ? Number(nominalBaru) : 150000 // Memastikan disimpan sebagai angka
+        nominal_spp: nominalBaru ? Number(nominalBaru) : 150000 
     };
     
     if (!updateData.nama || !updateData.kode_kelas || !updateData.no_wa_ortu) {
@@ -341,11 +363,7 @@ async function simpanPerubahanSiswa() {
 
     const { error } = await db.from('siswa').update(updateData).eq('id', id);
     if (error) alert("Error update: " + error.message);
-    else { 
-        alert("Berhasil diperbarui!"); 
-        tutupFormEdit(); 
-        muatDataSiswa(); 
-    }
+    else { alert("Berhasil diperbarui!"); tutupFormEdit(); muatDataSiswa(); }
 }
 
 async function hapusSiswa(id) {
@@ -357,12 +375,8 @@ async function hapusSiswa(id) {
 
 function downloadFormatCSV() {
     const csv = "data:text/csv;charset=utf-8,nis,nama,kode_kelas,no_wa_ortu,nominal_spp\n2026001,Budi Santoso,5-A,6281234567890,150000\n";
-    const link = document.createElement("a"); 
-    link.href = encodeURI(csv); 
-    link.download = "Format_Import_Siswa_SPP.csv";
-    document.body.appendChild(link); 
-    link.click(); 
-    document.body.removeChild(link);
+    const link = document.createElement("a"); link.href = encodeURI(csv); link.download = "Format_Import_Siswa_SPP.csv";
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
 }
 
 function uploadCSV(event) {
@@ -380,11 +394,8 @@ function uploadCSV(event) {
             const kolom = baris[i].split(",");
             if (kolom.length >= 5) {
                 dataSiswaBaru.push({ 
-                    nis: kolom[0].trim(), 
-                    nama: kolom[1].trim(), 
-                    kode_kelas: kolom[2].trim(), 
-                    no_wa_ortu: kolom[3].trim(), 
-                    nominal_spp: Number(kolom[4].trim()) 
+                    nis: kolom[0].trim(), nama: kolom[1].trim(), kode_kelas: kolom[2].trim(), 
+                    no_wa_ortu: kolom[3].trim(), nominal_spp: Number(kolom[4].trim()) 
                 });
             }
         }
@@ -392,12 +403,8 @@ function uploadCSV(event) {
         if (dataSiswaBaru.length > 0) {
             if (confirm(`Terbaca ${dataSiswaBaru.length} data siswa dari file. Lanjutkan simpan ke database?`)) {
                 const { error } = await db.from('siswa').insert(dataSiswaBaru);
-                if (error) {
-                    alert("Gagal mengimpor data: " + error.message);
-                } else {
-                    alert("Berhasil mengimpor seluruh data siswa!");
-                    muatDataSiswa(); 
-                }
+                if (error) alert("Gagal mengimpor data: " + error.message);
+                else { alert("Berhasil mengimpor seluruh data siswa!"); muatDataSiswa(); }
             }
         } else {
             alert("Tidak ada data yang valid untuk diimpor. Pastikan format CSV dipisahkan koma.");
@@ -419,14 +426,20 @@ async function muatDataGuru() {
     if (error) return tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">Error: ${error.message}</td></tr>`;
     
     data.forEach((g, idx) => {
-        let badge = g.role === 'admin' 
-            ? `<span style="background: #ef4444; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">ADMIN</span>`
-            : `<span style="background: #3b82f6; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">WALI KELAS</span>`;
+        let badge = '';
+        if (g.role === 'admin') badge = `<span style="background: #ef4444; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">ADMIN</span>`;
+        else if (g.role === 'kepala_sekolah') badge = `<span style="background: #8b5cf6; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">KEPALA SEKOLAH</span>`;
+        else badge = `<span style="background: #3b82f6; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">WALI KELAS</span>`;
         
         let kelasBadge = g.kode_kelas 
             ? `<span class="badge-role" style="background:#e2e8f0; color:#475569;">${g.kode_kelas}</span>` 
             : `<span style="color:#94a3b8; font-size: 12px;">Tidak Ada</span>`;
             
+        let tombolAksi = '-';
+        if (roleUserSaatIni === 'admin') {
+            tombolAksi = `<button onclick="bukaFormEditGuru('${g.id}', '${g.email || ''}', '${g.nama || ''}', '${g.role}', '${g.kode_kelas || ''}')" class="btn-primary" style="padding: 5px 15px; font-size: 12px;">Edit</button>`;
+        }
+
         tbody.innerHTML += `
             <tr>
                 <td class="col-center">${idx + 1}</td>
@@ -434,9 +447,7 @@ async function muatDataGuru() {
                 <td>${g.email || '-'}</td>
                 <td>${badge}</td>
                 <td>${kelasBadge}</td>
-                <td>
-                    <button onclick="bukaFormEditGuru('${g.id}', '${g.email || ''}', '${g.nama || ''}', '${g.role}', '${g.kode_kelas || ''}')" class="btn-primary" style="padding: 5px 15px; font-size: 12px;">Edit</button>
-                </td>
+                <td>${tombolAksi}</td>
             </tr>
         `;
     });
@@ -453,9 +464,7 @@ function bukaFormEditGuru(id, email, nama, role, kelas) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function tutupFormEditGuru() { 
-    document.getElementById('form-edit-guru-container').style.display = 'none'; 
-}
+function tutupFormEditGuru() { document.getElementById('form-edit-guru-container').style.display = 'none'; }
 
 async function simpanPerubahanGuru() {
     const id = document.getElementById('edit-id-guru').value;
@@ -465,23 +474,37 @@ async function simpanPerubahanGuru() {
         kode_kelas: document.getElementById('edit-kelas-guru').value 
     };
     
-    // Validasi: Jika ia guru/wali kelas, wajib punya kelas!
-    if (updateData.role === 'guru' && !updateData.kode_kelas) {
-        return alert("Wali Kelas wajib memiliki isi di kolom 'Kelas yang Diampu' (misal: 5-A)!");
-    }
-    
-    // Jika jadi admin, biasanya tidak pegang kelas tertentu
+    if (updateData.role === 'guru' && !updateData.kode_kelas) return alert("Wali Kelas wajib memiliki isi di kolom 'Kelas yang Diampu' (misal: 5-A)!");
     if (updateData.role === 'admin' && updateData.kode_kelas) {
-        let konfirm = confirm("Admin biasanya memiliki akses ke SEMUA kelas. Yakin ingin membatasi Admin ini di kelas " + updateData.kode_kelas + " saja?");
-        if(!konfirm) return;
+        if(!confirm("Admin biasanya memiliki akses ke SEMUA kelas. Yakin ingin membatasi Admin ini di kelas " + updateData.kode_kelas + " saja?")) return;
     }
 
     const { error } = await db.from('profiles').update(updateData).eq('id', id);
-    if (error) {
-        alert("Error update profil guru: " + error.message);
-    } else { 
-        alert("Profil guru & hak akses berhasil diperbarui!"); 
-        tutupFormEditGuru(); 
-        muatDataGuru(); 
-    }
+    if (error) alert("Error update profil guru: " + error.message);
+    else { alert("Profil guru & hak akses berhasil diperbarui!"); tutupFormEditGuru(); muatDataGuru(); }
+}
+
+function filterTabelTagihan() {
+    const keyword = document.getElementById('cari-tagihan').value.toLowerCase();
+    const kelasPilihan = document.getElementById('filter-kelas-tagihan').value;
+    const rows = document.querySelectorAll('#tabel-tunggakan tr');
+    
+    rows.forEach(row => {
+        if (row.cells.length < 3) return;
+        const namaSiswa = row.cells[1].innerText.toLowerCase();
+        const kelasSiswa = row.cells[2].innerText;
+        row.style.display = (namaSiswa.includes(keyword) && (kelasPilihan === "" || kelasSiswa === kelasPilihan)) ? "" : "none";
+    });
+}
+
+function filterTabelSiswa() {
+    const keyword = document.getElementById('cari-siswa').value.toLowerCase();
+    const rows = document.querySelectorAll('#tabel-data-siswa tr');
+    
+    rows.forEach(row => {
+        if (row.cells.length < 3) return;
+        const nisSiswa = row.cells[1].innerText.toLowerCase();
+        const namaSiswa = row.cells[2].innerText.toLowerCase();
+        row.style.display = (nisSiswa.includes(keyword) || namaSiswa.includes(keyword)) ? "" : "none";
+    });
 }
