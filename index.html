@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem SPP - Login</title>
+    <!-- Memanggil library Supabase langsung dari internet (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
+        .container { max-width: 400px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input, button { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
+        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        #dashboard { display: none; } /* Disembunyikan sebelum login */
+    </style>
+</head>
+<body>
+
+    <!-- HALAMAN LOGIN -->
+    <div id="login-section" class="container">
+        <h2>Login Sistem SPP</h2>
+        <input type="email" id="email" placeholder="Masukkan Email">
+        <input type="password" id="password" placeholder="Masukkan Password">
+        <button onclick="login()">Masuk</button>
+        <p id="pesan-error" style="color: red;"></p>
+    </div>
+
+    <!-- HALAMAN DASHBOARD (Muncul setelah berhasil login) -->
+    <div id="dashboard-section" class="container" style="display:none; max-width: 800px;">
+        <h2>Dashboard Utama</h2>
+        <p>Selamat datang, <b id="nama-user">...</b>!</p>
+        <p>Akses Anda: <span id="role-user" style="background: yellow; padding: 3px 5px;">...</span></p>
+        <hr>
+        <h3>Daftar Siswa yang Bisa Anda Lihat:</h3>
+        <ul id="daftar-siswa"></ul>
+        <button onclick="logout()" style="background-color: #f44336; width: 100px;">Logout</button>
+    </div>
+
+    <script>
+        // 1. Inisialisasi Koneksi ke Supabase
+        const SUPABASE_URL = 'https://xlgnbgjlxpfukyredibl.supabase.co/rest/v1/';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsZ25iZ2pseHBmdWt5cmVkaWJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MDQ4NDMsImV4cCI6MjEwMTM4MDg0M30.-6XK60RL0kz2U2diE5V8-Niphg2X1dWk8eIKvMB3_NY';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // 2. Fungsi Login
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                document.getElementById('pesan-error').innerText = "Login gagal: " + error.message;
+            } else {
+                tampilkanDashboard(data.user.id);
+            }
+        }
+
+        // 3. Fungsi Menampilkan Dashboard & Cek Role
+        async function tampilkanDashboard(userId) {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('dashboard-section').style.display = 'block';
+
+            // Ambil data profil (Nama & Role)
+            const { data: profil } = await supabase.from('profiles').select('*').eq('id', userId).single();
+            document.getElementById('nama-user').innerText = profil.nama;
+            document.getElementById('role-user').innerText = profil.role.toUpperCase();
+
+            // Ambil data siswa (Ini akan otomatis difilter oleh RLS di Supabase!)
+            const { data: siswa } = await supabase.from('siswa').select('*');
+            
+            const listSiswa = document.getElementById('daftar-siswa');
+            listSiswa.innerHTML = '';
+            
+            if(siswa.length === 0) {
+                listSiswa.innerHTML = '<li>Tidak ada data siswa untuk ditampilkan.</li>';
+            } else {
+                siswa.forEach(s => {
+                    listSiswa.innerHTML += `<li>[${s.kode_kelas}] ${s.nama} - NIS: ${s.nis}</li>`;
+                });
+            }
+        }
+
+        // 4. Fungsi Logout
+        async function logout() {
+            await supabase.auth.signOut();
+            window.location.reload(); // Refresh halaman
+        }
+    </script>
+</body>
+</html>
