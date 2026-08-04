@@ -213,10 +213,30 @@ async function generateTagihanMassal() {
     const bulanTagihanLengkap = inputBulan + "-01";
     if (!confirm(`Generate tagihan massal periode ${bulanTagihanLengkap.toUpperCase()} untuk SEMUA siswa aktif?`)) return;
 
+    // 1. Ambil semua data siswa aktif
     const { data: listSiswa, error: errorSiswa } = await db.from('siswa').select('id, nominal_spp');
     if (errorSiswa || !listSiswa) return alert("Gagal memuat data siswa.");
 
-    const tagihanBaru = listSiswa.map(s => ({
+    // 2. CEK tagihan yang SUDAH ADA di bulan tersebut
+    const { data: tagihanAda, error: errorTagihan } = await db.from('tagihan_spp')
+        .select('siswa_id')
+        .eq('bulan_tagihan', bulanTagihanLengkap);
+
+    if (errorTagihan) return alert("Gagal mengecek data riwayat tagihan.");
+
+    // Buat daftar ID siswa yang sudah dibuatkan tagihan bulan ini
+    const siswaSudahDitagih = tagihanAda.map(t => t.siswa_id);
+
+    // 3. FILTER siswa yang BELUM punya tagihan di bulan ini
+    const siswaBelumDitagih = listSiswa.filter(s => !siswaSudahDitagih.includes(s.id));
+
+    // Jika semua siswa sudah punya tagihan, hentikan proses
+    if (siswaBelumDitagih.length === 0) {
+        return alert(`Tagihan massal periode ${bulanTagihanLengkap} sudah pernah dibuat untuk seluruh siswa. Tidak ada tagihan duplikat yang ditambahkan.`);
+    }
+
+    // 4. Buat tagihan HANYA untuk siswa yang belum ditagih
+    const tagihanBaru = siswaBelumDitagih.map(s => ({
         siswa_id: s.id,
         bulan_tagihan: bulanTagihanLengkap,
         nominal: s.nominal_spp || 150000, 
@@ -224,8 +244,13 @@ async function generateTagihanMassal() {
     }));
 
     const { error } = await db.from('tagihan_spp').insert(tagihanBaru);
-    if (error) alert("Gagal (mungkin tagihan bulan ini sudah pernah dibuat): " + error.message);
-    else { alert(`Berhasil generate tagihan massal!`); muatDataTagihan('BELUM_BAYAR'); }
+    
+    if (error) {
+        alert("Terjadi kesalahan saat menyimpan tagihan: " + error.message);
+    } else { 
+        alert(`Berhasil! ${siswaBelumDitagih.length} tagihan baru ditambahkan untuk periode ${bulanTagihanLengkap}. (${siswaSudahDitagih.length} siswa dilewati karena sudah ada tagihan).`); 
+        muatDataTagihan('BELUM_BAYAR'); 
+    }
 }
 
 async function ubahStatusTagihan(idTagihan, statusBaru) {
