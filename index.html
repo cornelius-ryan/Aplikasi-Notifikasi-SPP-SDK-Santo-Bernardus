@@ -43,12 +43,28 @@
         <!-- AREA KONTEN KANAN -->
         <div class="content-area">
             
-            <!-- HALAMAN 1: DASHBOARD (HOME) -->
+           <!-- HALAMAN 1: DASHBOARD (HOME) -->
             <div id="page-home" class="halaman aktif">
-                <h2 style="margin-top: 0;">Selamat Datang!</h2>
+                <h2 style="margin-top: 0;">Dashboard Utama</h2>
                 <hr style="border: 0; height: 1px; background: #e2e8f0; margin: 20px 0;">
-                <p style="color: #475569;">Silakan pilih menu di samping untuk mengelola data sekolah.</p>
+                <p style="color: #475569; margin-bottom: 25px;">Ringkasan cepat data administrasi keuangan sekolah.</p>
                 
+                <!-- Kotak Statistik Ringkasan -->
+                <div class="stats-grid" id="panel-statistik-admin">
+                    <div class="stat-card">
+                        <h4>Total Siswa Aktif</h4>
+                        <p class="nilai" id="stat- total-siswa">...</p>
+                    </div>
+                    <div class="stat-card merah">
+                        <h4>Total Belum Bayar</h4>
+                        <p class="nilai" id="stat-total-tunggakan">...</p>
+                    </div>
+                    <div class="stat-card hijau">
+                        <h4>Total Sudah Lunas</h4>
+                        <p class="nilai" id="stat-total-lunas">...</p>
+                    </div>
+                </div>
+
                 <div id="panel-guru" style="display: none; margin-top: 30px;">
                     <h3 style="color: #334155;">Daftar Siswa di Kelas Anda:</h3>
                     <ul id="daftar-siswa" style="color: #475569; line-height: 1.8;"></ul>
@@ -90,22 +106,25 @@
                     </select>
                 </div>
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align: center; width: 40px;"><input type="checkbox" id="check-all" onclick="centangSemua()"></th>
-                            <th>Nama Siswa</th>
-                            <th>Kelas</th>
-                            <th>Bulan Tagihan</th>
-                            <th>Nominal</th>
-                            <th>Status</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabel-tunggakan">
-                        <!-- Data masuk via JS -->
-                    </tbody>
-                </table>
+               <!-- Pembungkus Tabel Agar Rapi & Tidak Morat-marit -->
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="text-align: center; width: 40px;"><input type="checkbox" id="check-all" onclick="centangSemua()"></th>
+                                <th>Nama Siswa</th>
+                                <th>Kelas</th>
+                                <th>Bulan Tagihan</th>
+                                <th>Nominal</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel-tunggakan">
+                            <!-- Data masuk via JS -->
+                        </tbody>
+                    </table>
+                </div>
                 
                 <button class="btn-biru" onclick="siapkanAntrean()" style="margin-top: 25px; border-radius: 6px;">Tarik Data Centang & Siapkan Antrean WA</button>
 
