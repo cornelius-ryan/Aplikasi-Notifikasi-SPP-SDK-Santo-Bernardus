@@ -37,9 +37,16 @@
             <ul id="daftar-siswa"></ul>
         </div>
 
-        <!-- PANEL KHUSUS ADMIN (Tabel Tagihan & Antrean WA) -->
+<!-- PANEL KHUSUS ADMIN (Tabel Tagihan & Antrean WA) -->
         <div id="panel-admin" style="display: none; margin-top: 20px;">
-            <h3>Daftar Tunggakan SPP</h3>
+            <h3>Data Tagihan SPP</h3>
+            
+            <!-- Tombol Filter Tabel -->
+            <div style="margin-bottom: 15px;">
+                <button class="btn-biru" onclick="muatDataTagihan('BELUM_BAYAR')" style="margin-top: 0;">Lihat Tunggakan</button>
+                <button class="btn-biru" onclick="muatDataTagihan('LUNAS')" style="margin-top: 0; background-color: #9c27b0;">Lihat Sudah Lunas</button>
+            </div>
+
             <table>
                 <thead>
                     <tr>
@@ -48,7 +55,8 @@
                         <th>Kelas</th>
                         <th>Bulan Tagihan</th>
                         <th>Nominal</th>
-                        <th>No. WA Ortu</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="tabel-tunggakan">
@@ -66,7 +74,6 @@
                 <button onclick="batalAntrean()" class="btn-merah" style="margin-left: 10px;">Batalkan Antrean</button>
             </div>
         </div>
-    </div>
 
     <!-- Memanggil file Javascript eksternal (Harus di bagian paling bawah body) -->
     <script src="app.js"></script>
