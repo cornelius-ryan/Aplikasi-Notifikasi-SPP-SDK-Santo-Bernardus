@@ -167,19 +167,38 @@
             document.querySelectorAll('.chk-item').forEach(chk => chk.checked = master);
         }
 
-        function siapkanAntrean() {
+function siapkanAntrean() {
             daftarAntrean = []; // Reset antrean
             indeksSaatIni = 0;
+            
+            // Kita gunakan Map untuk mengelompokkan data berdasarkan Nomor WA
+            const mapAntrean = new Map();
 
             // Ambil semua checkbox yang dicentang
             document.querySelectorAll('.chk-item:checked').forEach(chk => {
-                daftarAntrean.push({
-                    nama: chk.dataset.nama,
-                    wa: chk.dataset.wa,
-                    nominal: chk.dataset.nominal,
-                    bulan: chk.dataset.bulan
-                });
+                const nama = chk.dataset.nama;
+                const wa = chk.dataset.wa;
+                const nominal = Number(chk.dataset.nominal); // Pastikan jadi angka agar bisa dijumlah
+                const bulan = chk.dataset.bulan;
+
+                if (mapAntrean.has(wa)) {
+                    // Jika siswa/nomor WA sudah ada, tambahkan nominal dan bulannya
+                    const dataSiswa = mapAntrean.get(wa);
+                    dataSiswa.nominal += nominal;
+                    dataSiswa.bulan.push(bulan);
+                } else {
+                    // Jika belum ada, buat data baru dengan format array untuk bulan
+                    mapAntrean.set(wa, {
+                        nama: nama,
+                        wa: wa,
+                        nominal: nominal,
+                        bulan: [bulan]
+                    });
+                }
             });
+
+            // Ubah kembali data Map menjadi Array standar
+            daftarAntrean = Array.from(mapAntrean.values());
 
             if (daftarAntrean.length === 0) {
                 alert("Silakan centang minimal satu siswa terlebih dahulu.");
@@ -205,11 +224,14 @@
             }
         }
 
-        function kirimWaSekarang() {
+function kirimWaSekarang() {
             const target = daftarAntrean[indeksSaatIni];
             
-            // Format Pesan WhatsApp
-            const teksPesan = `Halo Bapak/Ibu Wali Murid dari *${target.nama}*,\n\nIni adalah pengingat dari sekolah bahwa terdapat tagihan SPP bulan *${target.bulan}* sebesar *Rp${Number(target.nominal).toLocaleString('id-ID')}* yang belum diselesaikan.\n\nMohon untuk segera melakukan pembayaran. Terima kasih.`;
+            // Menggabungkan array bulan menjadi teks yang rapi (misal: "2026-07-01 dan 2026-08-01")
+            const daftarBulan = target.bulan.join(' dan ');
+            
+            // Format Pesan WhatsApp yang sudah diperbarui dengan "total tagihan"
+            const teksPesan = `Halo Bapak/Ibu Wali Murid dari *${target.nama}*,\n\nIni adalah pengingat dari sekolah bahwa terdapat tagihan SPP bulan *${daftarBulan}* dengan total sebesar *Rp${target.nominal.toLocaleString('id-ID')}* yang belum diselesaikan.\n\nMohon untuk segera melakukan pembayaran. Terima kasih.`;
             
             // Membuat link wa.me
             const linkWa = `https://wa.me/${target.wa}?text=${encodeURIComponent(teksPesan)}`;
