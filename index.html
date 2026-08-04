@@ -3,22 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem SPP - Login</title>
-    <!-- Memanggil library Supabase langsung dari internet (CDN) -->
+    <title>Sistem SPP - Santo Bernardus</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
-        .container { max-width: 400px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        input, button { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
-        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input[type="email"], input[type="password"], button { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
+        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 4px;}
         button:hover { background-color: #45a049; }
-        #dashboard { display: none; } /* Disembunyikan sebelum login */
+        
+        /* Gaya Khusus Tabel & Admin Panel */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .btn-biru { background-color: #2196F3; width: auto; padding: 10px 20px; margin-top: 15px;}
+        .btn-merah { background-color: #f44336; width: auto; padding: 10px 20px;}
+        #antrean-panel { background-color: #e3f2fd; padding: 15px; border-radius: 8px; border: 1px solid #90caf9; margin-top: 20px; }
     </style>
 </head>
 <body>
 
     <!-- HALAMAN LOGIN -->
-    <div id="login-section" class="container">
+    <div id="login-section" class="container" style="max-width: 400px;">
         <h2>Login Sistem SPP</h2>
         <input type="email" id="email" placeholder="Masukkan Email">
         <input type="password" id="password" placeholder="Masukkan Password">
@@ -26,86 +32,204 @@
         <p id="pesan-error" style="color: red;"></p>
     </div>
 
-    <!-- HALAMAN DASHBOARD (Muncul setelah berhasil login) -->
-    <div id="dashboard-section" class="container" style="display:none; max-width: 800px;">
-        <h2>Dashboard Utama</h2>
-        <p>Selamat datang, <b id="nama-user">...</b>!</p>
-        <p>Akses Anda: <span id="role-user" style="background: yellow; padding: 3px 5px;">...</span></p>
+    <!-- HALAMAN DASHBOARD -->
+    <div id="dashboard-section" class="container" style="display:none;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2>Dashboard Utama</h2>
+                <p>Selamat datang, <b id="nama-user">...</b>! (Akses: <span id="role-user" style="background: yellow; padding: 2px 5px;">...</span>)</p>
+            </div>
+            <button onclick="logout()" class="btn-merah">Logout</button>
+        </div>
         <hr>
-        <h3>Daftar Siswa yang Bisa Anda Lihat:</h3>
-        <ul id="daftar-siswa"></ul>
-        <button onclick="logout()" style="background-color: #f44336; width: 100px;">Logout</button>
+
+        <!-- DAFTAR SISWA (Hanya terlihat rapi untuk Guru) -->
+        <div id="panel-guru">
+            <h3>Daftar Siswa di Kelas Anda:</h3>
+            <ul id="daftar-siswa"></ul>
+        </div>
+
+        <!-- PANEL KHUSUS ADMIN (Tabel Tagihan & Antrean WA) -->
+        <div id="panel-admin" style="display: none; margin-top: 20px;">
+            <h3>Daftar Tunggakan SPP</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="text-align: center;"><input type="checkbox" id="check-all" onclick="centangSemua()"></th>
+                        <th>Nama Siswa</th>
+                        <th>Kelas</th>
+                        <th>Bulan Tagihan</th>
+                        <th>Nominal</th>
+                        <th>No. WA Ortu</th>
+                    </tr>
+                </thead>
+                <tbody id="tabel-tunggakan">
+                    <!-- Data masuk ke sini via Javascript -->
+                </tbody>
+            </table>
+            
+            <button class="btn-biru" onclick="siapkanAntrean()">Tarik Data Centang & Siapkan Antrean WA</button>
+
+            <!-- KOTAK EKSEKUSI ANTREAN -->
+            <div id="antrean-panel" style="display: none;">
+                <h4>Proses Antrean WhatsApp</h4>
+                <p id="status-antrean">Menunggu...</p>
+                <button id="btn-kirim-wa" onclick="kirimWaSekarang()" style="background-color: #4CAF50; width: auto; padding: 10px 20px; font-size: 16px; font-weight: bold;">Kirim Pesan Sekarang</button>
+                <button onclick="batalAntrean()" class="btn-merah" style="margin-left: 10px;">Batalkan Antrean</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // 1. Inisialisasi Koneksi ke Supabase (SUDAH DIPERBAIKI)
         const SUPABASE_URL = 'https://xlgnbgjlxpfukyredibl.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsZ25iZ2pseHBmdWt5cmVkaWJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MDQ4NDMsImV4cCI6MjEwMTM4MDg0M30.-6XK60RL0kz2U2diE5V8-Niphg2X1dWk8eIKvMB3_NY';
-        
-        // Ubah variabel menjadi 'db' agar tidak bentrok
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // 2. Fungsi Login
+        // Variabel Global untuk Antrean
+        let daftarAntrean = [];
+        let indeksSaatIni = 0;
+
         async function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const tombol = document.querySelector('button');
-            const pesanError = document.getElementById('pesan-error');
+            const tombol = document.querySelector('#login-section button');
             
             tombol.innerText = 'Memproses...';
-            pesanError.innerText = '';
+            document.getElementById('pesan-error').innerText = '';
 
-            const { data, error } = await db.auth.signInWithPassword({
-                email: email,
-                password: password,
-            });
+            const { data, error } = await db.auth.signInWithPassword({ email: email, password: password });
 
             if (error) {
-                pesanError.innerText = "Login gagal: " + error.message;
+                document.getElementById('pesan-error').innerText = "Login gagal: " + error.message;
                 tombol.innerText = 'Masuk';
             } else {
                 tampilkanDashboard(data.user.id);
             }
         }
 
-        // 3. Fungsi Menampilkan Dashboard & Cek Role
         async function tampilkanDashboard(userId) {
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('dashboard-section').style.display = 'block';
 
-            // Ambil data profil (Nama & Role)
-            const { data: profil, error: errorProfil } = await db.from('profiles').select('*').eq('id', userId).single();
-            
-            if (errorProfil) {
-                console.error("Gagal ambil profil:", errorProfil);
-                return;
-            }
-
+            // Tarik Profil
+            const { data: profil } = await db.from('profiles').select('*').eq('id', userId).single();
             document.getElementById('nama-user').innerText = profil.nama;
             document.getElementById('role-user').innerText = profil.role.toUpperCase();
 
-            // Ambil data siswa (Otomatis difilter oleh RLS!)
-            const { data: siswa, error: errorSiswa } = await db.from('siswa').select('*');
-            
-            const listSiswa = document.getElementById('daftar-siswa');
-            listSiswa.innerHTML = '';
-            
-            if (errorSiswa) {
-                listSiswa.innerHTML = '<li style="color:red;">Gagal menarik data siswa dari database.</li>';
-                console.error(errorSiswa);
-            } else if (siswa.length === 0) {
-                listSiswa.innerHTML = '<li>Tidak ada data siswa untuk ditampilkan.</li>';
+            // Atur Tampilan Berdasarkan Role
+            if (profil.role === 'admin') {
+                document.getElementById('panel-guru').style.display = 'none';
+                document.getElementById('panel-admin').style.display = 'block';
+                muatDataTunggakan(); // Jalankan fungsi tarik data tagihan
             } else {
-                siswa.forEach(s => {
-                    listSiswa.innerHTML += `<li>[${s.kode_kelas}] ${s.nama} - NIS: ${s.nis}</li>`;
+                // Tampilan Guru
+                const { data: siswa } = await db.from('siswa').select('*');
+                const listSiswa = document.getElementById('daftar-siswa');
+                listSiswa.innerHTML = '';
+                siswa.forEach(s => listSiswa.innerHTML += `<li>[${s.kode_kelas}] ${s.nama} - NIS: ${s.nis}</li>`);
+            }
+        }
+
+        // FUNGSI KHUSUS ADMIN
+        async function muatDataTunggakan() {
+            // Menarik data tagihan sekaligus mengambil info siswa yang berelasi
+            const { data, error } = await db.from('tagihan_spp')
+                .select(`id, bulan_tagihan, nominal, status, siswa ( nama, kode_kelas, no_wa_ortu )`)
+                .eq('status', 'BELUM_BAYAR');
+
+            const tbody = document.getElementById('tabel-tunggakan');
+            tbody.innerHTML = '';
+            
+            if(data) {
+                data.forEach(row => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="text-align: center;">
+                                <input type="checkbox" class="chk-item" 
+                                    data-nama="${row.siswa.nama}" 
+                                    data-wa="${row.siswa.no_wa_ortu}" 
+                                    data-nominal="${row.nominal}" 
+                                    data-bulan="${row.bulan_tagihan}">
+                            </td>
+                            <td>${row.siswa.nama}</td>
+                            <td>${row.siswa.kode_kelas}</td>
+                            <td>${row.bulan_tagihan}</td>
+                            <td>Rp${row.nominal.toLocaleString('id-ID')}</td>
+                            <td>${row.siswa.no_wa_ortu}</td>
+                        </tr>
+                    `;
                 });
             }
         }
 
-        // 4. Fungsi Logout
+        function centangSemua() {
+            const master = document.getElementById('check-all').checked;
+            document.querySelectorAll('.chk-item').forEach(chk => chk.checked = master);
+        }
+
+        function siapkanAntrean() {
+            daftarAntrean = []; // Reset antrean
+            indeksSaatIni = 0;
+
+            // Ambil semua checkbox yang dicentang
+            document.querySelectorAll('.chk-item:checked').forEach(chk => {
+                daftarAntrean.push({
+                    nama: chk.dataset.nama,
+                    wa: chk.dataset.wa,
+                    nominal: chk.dataset.nominal,
+                    bulan: chk.dataset.bulan
+                });
+            });
+
+            if (daftarAntrean.length === 0) {
+                alert("Silakan centang minimal satu siswa terlebih dahulu.");
+                return;
+            }
+
+            document.getElementById('antrean-panel').style.display = 'block';
+            updateLayarAntrean();
+        }
+
+        function updateLayarAntrean() {
+            const statusText = document.getElementById('status-antrean');
+            const btnKirim = document.getElementById('btn-kirim-wa');
+
+            if (indeksSaatIni < daftarAntrean.length) {
+                const target = daftarAntrean[indeksSaatIni];
+                statusText.innerHTML = `Mengirim pesan <b>${indeksSaatIni + 1} dari ${daftarAntrean.length}</b><br>Tujuan: <b>${target.nama}</b> (${target.wa})`;
+                btnKirim.innerText = `Kirim Pesan ke-${indeksSaatIni + 1}`;
+                btnKirim.style.display = 'inline-block';
+            } else {
+                statusText.innerHTML = `<span style="color: green; font-weight: bold;">Selesai!</span> Semua pesan dalam antrean sudah diproses.`;
+                btnKirim.style.display = 'none';
+            }
+        }
+
+        function kirimWaSekarang() {
+            const target = daftarAntrean[indeksSaatIni];
+            
+            // Format Pesan WhatsApp
+            const teksPesan = `Halo Bapak/Ibu Wali Murid dari *${target.nama}*,\n\nIni adalah pengingat dari sekolah bahwa terdapat tagihan SPP bulan *${target.bulan}* sebesar *Rp${Number(target.nominal).toLocaleString('id-ID')}* yang belum diselesaikan.\n\nMohon untuk segera melakukan pembayaran. Terima kasih.`;
+            
+            // Membuat link wa.me
+            const linkWa = `https://wa.me/${target.wa}?text=${encodeURIComponent(teksPesan)}`;
+            
+            // Buka Web WA di Tab Baru
+            window.open(linkWa, '_blank');
+            
+            // Lanjut ke orang berikutnya
+            indeksSaatIni++;
+            updateLayarAntrean();
+        }
+
+        function batalAntrean() {
+            document.getElementById('antrean-panel').style.display = 'none';
+            daftarAntrean = [];
+        }
+
         async function logout() {
             await db.auth.signOut();
-            window.location.reload(); // Refresh halaman
+            window.location.reload();
         }
     </script>
 </body>
