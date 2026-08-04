@@ -36,17 +36,25 @@ async function tampilkanDashboard(userId) {
     document.getElementById('nama-user').innerText = profil.nama;
     document.getElementById('role-user').innerText = profil.role.toUpperCase();
 
-    // Atur Tampilan Berdasarkan Role
+// Atur Tampilan Berdasarkan Role
     if (profil.role === 'admin') {
+        // Admin: Tampilkan menu tagihan di sidebar, dan panggil data tagihan
+        document.getElementById('btn-menu-tagihan').style.display = 'block';
         document.getElementById('panel-guru').style.display = 'none';
-        document.getElementById('panel-admin').style.display = 'block';
         muatDataTagihan('BELUM_BAYAR'); 
     } else {
+        // Guru: Menu tagihan disembunyikan, langsung tampilkan daftar siswa di home
+        document.getElementById('btn-menu-tagihan').style.display = 'none';
+        document.getElementById('panel-guru').style.display = 'block';
+        
         const { data: siswa } = await db.from('siswa').select('*');
         const listSiswa = document.getElementById('daftar-siswa');
         listSiswa.innerHTML = '';
         siswa.forEach(s => listSiswa.innerHTML += `<li>[${s.kode_kelas}] ${s.nama} - NIS: ${s.nis}</li>`);
     }
+
+    // Pastikan saat pertama kali login, yang terbuka selalu Dashboard Utama (Home)
+    bukaMenu('page-home');
 }
 
 // Fungsi untuk memuat tabel berdasarkan status (LUNAS / BELUM_BAYAR)
