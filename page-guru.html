@@ -1,7 +1,43 @@
 <section id="page-guru" class="halaman aktif">
     <h2>Manajemen Data Guru & Wali Kelas</h2>
     <hr class="divider">
-    <p class="subtitle">Daftar guru atau wali kelas yang terdaftar beserta hak aksesnya.</p>
+
+    <div class="panel-info">
+        <h4 style="margin-top: 0; color: #1e40af;">ℹ️ Info Penambahan Akun Guru</h4>
+        <p style="font-size: 14px; color: #3b82f6; margin-bottom: 0;">Untuk alasan keamanan, pembuatan email & kata sandi akun Guru baru (serta penghapusan akun) dilakukan melalui <b>Dashboard Supabase > Authentication</b>. Setelah akun terdaftar di sana, Admin dapat mengatur Nama Lengkap, Role, dan Kelas yang diampu melalui tabel di bawah ini.</p>
+    </div>
+
+    <div id="form-edit-guru-container" class="modal-form-edit">
+        <h4 style="margin-top: 0; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">✏️ Atur Profil Guru / Hak Akses</h4>
+        <input type="hidden" id="edit-id-guru">
+
+        <div class="grid-form">
+            <div>
+                <label>Email Akun:</label>
+                <input type="text" id="edit-email-guru" disabled class="input-disabled" title="Email tidak bisa diubah dari sini">
+            </div>
+            <div>
+                <label>Nama Lengkap:</label>
+                <input type="text" id="edit-nama-guru" class="input-modern" placeholder="Masukkan nama guru">
+            </div>
+            <div>
+                <label>Role / Hak Akses:</label>
+                <select id="edit-role-guru" class="input-modern">
+                    <option value="guru">Wali Kelas</option>
+                    <option value="admin">Admin (Akses Penuh)</option>
+                </select>
+            </div>
+            <div>
+                <label>Kelas yang Diampu:</label>
+                <input type="text" id="edit-kelas-guru" class="input-modern" placeholder="Contoh: 5-A (Kosongkan jika Admin)">
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button onclick="simpanPerubahanGuru()" class="btn-primary">💾 Simpan Perubahan</button>
+            <button onclick="tutupFormEditGuru()" class="btn-abu">Batal</button>
+        </div>
+    </div>
     
     <div class="table-responsive">
         <table>
@@ -10,12 +46,13 @@
                     <th class="col-center">No</th>
                     <th>Nama Lengkap</th>
                     <th>Email Akun</th>
-                    <th>Role / Hak Akses</th>
-                    <th>Status</th>
+                    <th>Role</th>
+                    <th>Kelas</th>
+                    <th style="width: 100px;">Aksi</th>
                 </tr>
             </thead>
             <tbody id="tabel-data-guru">
-                <tr><td colspan="5" style="text-align:center; color:#64748b;">Memuat data guru...</td></tr>
+                <tr><td colspan="6" style="text-align:center; color:#64748b;">Memuat data guru...</td></tr>
             </tbody>
         </table>
     </div>
