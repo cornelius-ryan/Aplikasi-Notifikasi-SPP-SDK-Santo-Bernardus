@@ -60,7 +60,7 @@ th { background-color: #f2f2f2; }
     flex: 1; 
     padding: 30px; 
     background-color: #f0f2f5; 
-    overflow-x: auto; /* Mencegah tabel merusak layout di layar kecil */
+    overflow-x: auto; 
     box-sizing: border-box;
 }
 .halaman { 
@@ -106,7 +106,7 @@ th { background-color: #f2f2f2; }
    ========================================= */
 @media (max-width: 768px) {
     .dashboard-wrapper {
-        flex-direction: column; /* Sidebar pindah ke atas, konten di bawahnya */
+        flex-direction: column;
     }
     .sidebar {
         width: 100%;
@@ -114,12 +114,12 @@ th { background-color: #f2f2f2; }
         padding: 15px;
         box-shadow: none;
     }
-    .sidebar p { display: none; } /* Menyembunyikan teks halo di HP agar lebih ringkas */
+    .sidebar p { display: none; } 
     .sidebar .spacer { display: none; }
     .sidebar .btn-logout { margin-top: 10px; }
     
     .content-area {
-        padding: 15px; /* Mengurangi padding agar konten lebih luas di layar HP */
+        padding: 15px;
     }
     .halaman {
         padding: 15px;
@@ -160,7 +160,7 @@ th { background-color: #f2f2f2; }
 table {
     width: 100%;
     border-collapse: collapse;
-    white-space: nowrap; /* Mencegah teks terpotong aneh di layar sempit */
+    white-space: nowrap;
 }
 th, td {
     padding: 12px 16px;
