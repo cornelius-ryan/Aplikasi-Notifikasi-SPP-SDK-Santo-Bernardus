@@ -55,18 +55,93 @@ button {
 .input-disabled { background-color: var(--bg-light); cursor: not-allowed; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 6px; width: 100%; }
 
 /* =========================================
-   LOGIN & TYPOGRAPHY
+   LOGIN MODERN & TYPOGRAPHY
    ========================================= */
-.container.modal-login {
-    max-width: 400px;
-    margin: 50px auto;
-    background: white;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: var(--shadow-md);
+.login-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    /* Memberikan latar belakang gradien yang sangat lembut dan bersih */
+    background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%); 
+    width: 100%;
 }
-.divider { border: 0; height: 1px; background: var(--border-color); margin: 20px 0; }
-.subtitle { color: var(--text-muted); margin-bottom: 25px; }
+
+.modal-login {
+    width: 100%;
+    max-width: 380px;
+    background: #ffffff;
+    padding: 40px 30px;
+    border-radius: 20px;
+    /* Shadow lembut yang memberikan efek melayang elegan */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08); 
+    box-sizing: border-box;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-header .ikon-sekolah {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.login-header h2 {
+    color: #0f172a;
+    margin: 0 0 5px 0;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.login-header p {
+    color: #64748b;
+    margin: 0;
+    font-size: 14px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.btn-login {
+    background-color: var(--primary);
+    color: white;
+    padding: 12px 20px;
+    width: 100%;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 8px;
+    margin-top: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+}
+
+.btn-login:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px); /* Efek tombol terangkat saat di-hover */
+    box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+}
+
+.pesan-error {
+    color: #ef4444;
+    text-align: center;
+    font-size: 13px;
+    margin-top: 15px;
+    min-height: 20px; /* Mencegah layout melompat saat error muncul */
+}
 
 /* =========================================
    LAYOUT DASHBOARD
