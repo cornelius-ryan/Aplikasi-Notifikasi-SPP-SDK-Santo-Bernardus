@@ -1,0 +1,56 @@
+<section id="page-tagihan" class="halaman aktif">
+    <div class="panel-info">
+        <h4 style="margin-top: 0; color: #1e40af;">⚙️ Generator Tagihan Bulanan</h4>
+        <p style="font-size: 14px; color: #3b82f6; margin-bottom: 15px;">Sistem otomatis membuatkan tagihan untuk seluruh siswa aktif.</p>
+        <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: bold; color: #1e3a8a; margin-bottom: 5px;">Pilih Bulan & Tahun:</label>
+                <input type="month" id="input-bulan-tagihan" value="2026-08" class="input-modern">
+            </div>
+            <button onclick="generateTagihanMassal()" class="btn-primary">⚡ Generate Massal</button>
+        </div>
+    </div>
+
+    <h2>Kelola Data Tagihan SPP</h2>
+    <hr class="divider">
+    
+    <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn-primary" onclick="muatDataTagihan('BELUM_BAYAR')">Lihat Tunggakan</button>
+        <button class="btn-ungu" onclick="muatDataTagihan('LUNAS')">Lihat Sudah Lunas</button>
+    </div>
+    
+    <div class="filter-bar">
+        <input type="text" id="cari-tagihan" placeholder="🔍 Cari nama siswa..." onkeyup="filterTabelTagihan()" class="input-modern">
+        <select id="filter-kelas-tagihan" onchange="filterTabelTagihan()" class="input-modern">
+            <option value="">Semua Kelas</option>
+            <option value="5-A">Kelas 5-A</option>
+            <option value="5-B">Kelas 5-B</option>
+        </select>
+    </div>
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th class="col-center"><input type="checkbox" id="check-all" onclick="centangSemua()"></th>
+                    <th>Nama Siswa</th>
+                    <th>Kelas</th>
+                    <th>Bulan Tagihan</th>
+                    <th>Nominal</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tabel-tunggakan"></tbody>
+        </table>
+    </div>
+    
+    <button class="btn-primary" onclick="siapkanAntrean()" style="margin-top: 15px;">Tarik Data Centang & Siapkan Antrean WA</button>
+
+    <div id="antrean-panel" class="panel-success" style="display: none;">
+        <h4 style="color: #166534; margin-top: 0;">Proses Antrean WhatsApp</h4>
+        <p id="status-antrean" style="color: #15803d; margin-bottom: 15px;">Menunggu...</p>
+        <button id="btn-kirim-wa" onclick="kirimWaSekarang()" class="btn-hijau">Kirim Pesan Sekarang</button>
+        <button onclick="batalAntrean()" class="btn-merah">Batalkan Antrean</button>
+    </div>
+</section>
