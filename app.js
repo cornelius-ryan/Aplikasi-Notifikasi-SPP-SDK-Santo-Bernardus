@@ -52,6 +52,7 @@ async function tampilkanDashboard(userId) {
     if (profil.role === 'admin') {
         document.getElementById('btn-menu-tagihan').style.display = 'block';
         document.getElementById('btn-menu-siswa').style.display = 'block';
+        document.getElementById('btn-menu-guru').style.display = 'block';
         document.getElementById('panel-guru').style.display = 'none';
         
         muatStatistikDashboard(); 
@@ -225,6 +226,10 @@ function bukaMenu(idHalaman) {
     if (idHalaman === 'page-siswa') {
         document.getElementById('btn-menu-siswa').classList.add('menu-aktif');
         muatDataSiswa(); 
+    }
+    if (idHalaman === 'page-guru') {
+        document.getElementById('btn-menu-guru').classList.add('menu-aktif');
+        muatDataGuru();
     }
 }
 
@@ -481,4 +486,44 @@ async function muatStatistikDashboard() {
 
     const { count: jumlahLunas } = await db.from('tagihan_spp').select('*', { count: 'exact', head: true }).eq('status', 'LUNAS');
     document.getElementById('stat-total-lunas').innerText = jumlahLunas || 0;
+}
+
+// ==========================================
+// FUNGSI MANAJEMEN DATA GURU
+// ==========================================
+async function muatDataGuru() {
+    // Tarik data dari tabel profiles
+    const { data, error } = await db.from('profiles')
+        .select('*')
+        .order('nama', { ascending: true });
+
+    const tbody = document.getElementById('tabel-data-guru');
+    tbody.innerHTML = '';
+
+    if (error) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Gagal memuat data guru: ${error.message}</td></tr>`;
+        return;
+    }
+
+    if (data && data.length > 0) {
+        data.forEach((g, index) => {
+            let badgeRole = g.role === 'admin' 
+                ? '<span style="background-color: #ef4444; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">ADMIN</span>' 
+                : '<span style="background-color: #3b82f6; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">GURU / WALI KELAS</span>';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="text-align: center; color: #64748b;">${index + 1}</td>
+                    <td style="font-weight: 500;">${g.nama || '-'}</td>
+                    <td>${g.email || '-'}</td>
+                    <td>${badgeRole}</td>
+                    <td>
+                        <span style="color: #64748b; font-size: 13px; font-style: italic;">Sistem Aktif</span>
+                    </td>
+                </tr>
+            `;
+        });
+    } else {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b;">Belum ada data guru/profil terdaftar.</td></tr>`;
+    }
 }
