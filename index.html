@@ -38,23 +38,31 @@
     </div>
 
     <script>
-        // 1. Inisialisasi Koneksi ke Supabase
-        const SUPABASE_URL = https://xlgnbgjlxpfukyredibl.supabase.co/rest/v1/;
-        const SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsZ25iZ2pseHBmdWt5cmVkaWJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MDQ4NDMsImV4cCI6MjEwMTM4MDg0M30.-6XK60RL0kz2U2diE5V8-Niphg2X1dWk8eIKvMB3_NY;
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // 1. Inisialisasi Koneksi ke Supabase (SUDAH DIPERBAIKI)
+        const SUPABASE_URL = 'https://xlgnbgjlxpfukyredibl.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsZ25iZ2pseHBmdWt5cmVkaWJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MDQ4NDMsImV4cCI6MjEwMTM4MDg0M30.-6XK60RL0kz2U2diE5V8-Niphg2X1dWk8eIKvMB3_NY';
+        
+        // Ubah variabel menjadi 'db' agar tidak bentrok
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // 2. Fungsi Login
         async function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const tombol = document.querySelector('button');
+            const pesanError = document.getElementById('pesan-error');
             
-            const { data, error } = await supabase.auth.signInWithPassword({
+            tombol.innerText = 'Memproses...';
+            pesanError.innerText = '';
+
+            const { data, error } = await db.auth.signInWithPassword({
                 email: email,
                 password: password,
             });
 
             if (error) {
-                document.getElementById('pesan-error').innerText = "Login gagal: " + error.message;
+                pesanError.innerText = "Login gagal: " + error.message;
+                tombol.innerText = 'Masuk';
             } else {
                 tampilkanDashboard(data.user.id);
             }
@@ -66,17 +74,26 @@
             document.getElementById('dashboard-section').style.display = 'block';
 
             // Ambil data profil (Nama & Role)
-            const { data: profil } = await supabase.from('profiles').select('*').eq('id', userId).single();
+            const { data: profil, error: errorProfil } = await db.from('profiles').select('*').eq('id', userId).single();
+            
+            if (errorProfil) {
+                console.error("Gagal ambil profil:", errorProfil);
+                return;
+            }
+
             document.getElementById('nama-user').innerText = profil.nama;
             document.getElementById('role-user').innerText = profil.role.toUpperCase();
 
-            // Ambil data siswa (Ini akan otomatis difilter oleh RLS di Supabase!)
-            const { data: siswa } = await supabase.from('siswa').select('*');
+            // Ambil data siswa (Otomatis difilter oleh RLS!)
+            const { data: siswa, error: errorSiswa } = await db.from('siswa').select('*');
             
             const listSiswa = document.getElementById('daftar-siswa');
             listSiswa.innerHTML = '';
             
-            if(siswa.length === 0) {
+            if (errorSiswa) {
+                listSiswa.innerHTML = '<li style="color:red;">Gagal menarik data siswa dari database.</li>';
+                console.error(errorSiswa);
+            } else if (siswa.length === 0) {
                 listSiswa.innerHTML = '<li>Tidak ada data siswa untuk ditampilkan.</li>';
             } else {
                 siswa.forEach(s => {
@@ -87,7 +104,7 @@
 
         // 4. Fungsi Logout
         async function logout() {
-            await supabase.auth.signOut();
+            await db.auth.signOut();
             window.location.reload(); // Refresh halaman
         }
     </script>
