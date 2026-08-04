@@ -7,7 +7,7 @@
     <!-- Memanggil library Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Memanggil file CSS eksternal -->
-    <link rel="stylesheet" href="style.css?v=6">
+    <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 
@@ -20,8 +20,7 @@
         <p id="pesan-error" style="color: red;"></p>
     </div>
 
-<!-- HALAMAN DASHBOARD (Layout Modern) -->
-    <!-- PERUBAHAN: Class 'container' dihapus, diganti jadi 'dashboard-wrapper' -->
+    <!-- HALAMAN DASHBOARD (Layout Modern) -->
     <div id="dashboard-section" class="dashboard-wrapper" style="display:none;">
         
         <!-- SIDEBAR KIRI -->
@@ -58,6 +57,7 @@
 
             <!-- HALAMAN 2: DATA TAGIHAN (KHUSUS ADMIN) -->
             <div id="page-tagihan" class="halaman">
+                
                 <!-- PANEL GENERATOR TAGIHAN BULANAN -->
                 <div style="background-color: #eff6ff; padding: 20px; border-radius: 8px; border: 1px solid #bfdbfe; margin-bottom: 25px;">
                     <h4 style="margin-top: 0; color: #1e40af;">⚙️ Generator Tagihan Bulanan (Massal)</h4>
@@ -66,12 +66,12 @@
                     <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
                         <div>
                             <label style="display: block; font-size: 13px; font-weight: bold; color: #1e3a8a; margin-bottom: 5px;">Pilih Bulan & Tahun:</label>
-                            <!-- Menggunakan input type="month" agar otomatis menjadi pemilih bulan/tahun yang rapi -->
                             <input type="month" id="input-bulan-tagihan" value="2026-08" style="padding: 8px; border: 1px solid #93c5fd; border-radius: 6px; width: 180px;">
                         </div>
                         <button onclick="generateTagihanMassal()" style="background-color: #2563eb; color: white; width: auto; padding: 9px 20px; font-size: 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold;">⚡ Generate Tagihan Massal</button>
                     </div>
                 </div>
+
                 <h2 style="margin-top: 0;">Kelola Data Tagihan SPP</h2>
                 <hr style="border: 0; height: 1px; background: #e2e8f0; margin: 20px 0;">
                 
@@ -87,11 +87,38 @@
                         <option value="">Semua Kelas</option>
                         <option value="5-A">Kelas 5-A</option>
                         <option value="5-B">Kelas 5-B</option>
-                        <!-- Tambahkan opsi kelas lainnya sesuai kebutuhan -->
                     </select>
                 </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align: center; width: 40px;"><input type="checkbox" id="check-all" onclick="centangSemua()"></th>
+                            <th>Nama Siswa</th>
+                            <th>Kelas</th>
+                            <th>Bulan Tagihan</th>
+                            <th>Nominal</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabel-tunggakan">
+                        <!-- Data masuk via JS -->
+                    </tbody>
+                </table>
                 
-                <!-- HALAMAN 3: DATA SISWA (KHUSUS ADMIN) -->
+                <button class="btn-biru" onclick="siapkanAntrean()" style="margin-top: 25px; border-radius: 6px;">Tarik Data Centang & Siapkan Antrean WA</button>
+
+                <!-- KOTAK EKSEKUSI ANTREAN -->
+                <div id="antrean-panel" style="display: none; background-color: #f0fdf4; border: 1px solid #bbf7d0;">
+                    <h4 style="color: #166534; margin-top: 0;">Proses Antrean WhatsApp</h4>
+                    <p id="status-antrean" style="color: #15803d;">Menunggu...</p>
+                    <button id="btn-kirim-wa" onclick="kirimWaSekarang()" style="background-color: #22c55e; width: auto; padding: 12px 25px; font-size: 15px; font-weight: bold; border-radius: 6px;">Kirim Pesan Sekarang</button>
+                    <button onclick="batalAntrean()" class="btn-merah" style="margin-left: 10px; border-radius: 6px;">Batalkan Antrean</button>
+                </div>
+            </div> <!-- Akhir dari div page-tagihan -->
+
+            <!-- HALAMAN 3: DATA SISWA (KHUSUS ADMIN) -->
             <div id="page-siswa" class="halaman">
                 <h2 style="margin-top: 0;">Manajemen Data Siswa</h2>
                 <hr style="border: 0; height: 1px; background: #e2e8f0; margin: 20px 0;">
@@ -133,40 +160,12 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </div> <!-- Akhir dari div page-siswa -->
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align: center; width: 40px;"><input type="checkbox" id="check-all" onclick="centangSemua()"></th>
-                            <th>Nama Siswa</th>
-                            <th>Kelas</th>
-                            <th>Bulan Tagihan</th>
-                            <th>Nominal</th>
-                            <th>Status</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabel-tunggakan">
-                        <!-- Data masuk via JS -->
-                    </tbody>
-                </table>
-                
-                <button class="btn-biru" onclick="siapkanAntrean()" style="margin-top: 25px; border-radius: 6px;">Tarik Data Centang & Siapkan Antrean WA</button>
-
-                <!-- KOTAK EKSEKUSI ANTREAN -->
-                <div id="antrean-panel" style="display: none; background-color: #f0fdf4; border: 1px solid #bbf7d0;">
-                    <h4 style="color: #166534; margin-top: 0;">Proses Antrean WhatsApp</h4>
-                    <p id="status-antrean" style="color: #15803d;">Menunggu...</p>
-                    <button id="btn-kirim-wa" onclick="kirimWaSekarang()" style="background-color: #22c55e; width: auto; padding: 12px 25px; font-size: 15px; font-weight: bold; border-radius: 6px;">Kirim Pesan Sekarang</button>
-                    <button onclick="batalAntrean()" class="btn-merah" style="margin-left: 10px; border-radius: 6px;">Batalkan Antrean</button>
-                </div>
-            </div>
-
-        </div>
-    </div>
+        </div> <!-- Akhir dari content-area -->
+    </div> <!-- Akhir dari dashboard-wrapper -->
 
     <!-- Memanggil file Javascript eksternal (Harus di bagian paling bawah body) -->
-    <script src="app.js?v=6"></script>
+    <script src="app.js?v=7"></script>
 </body>
 </html>
