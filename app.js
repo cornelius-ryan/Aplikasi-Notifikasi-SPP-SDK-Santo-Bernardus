@@ -75,27 +75,46 @@ async function tampilkanDashboard(userId) {
 // ==========================================
 // 3. NAVIGASI HALAMAN (SPA) & STATISTIK
 // ==========================================
-function bukaMenu(idHalaman) {
-    document.querySelectorAll('.halaman').forEach(hal => hal.classList.remove('aktif'));
-    document.getElementById(idHalaman).classList.add('aktif');
-
+// ==========================================
+// FUNGSI NAVIGASI HALAMAN (MODULAR SPA)
+// ==========================================
+async function bukaMenu(idHalaman) {
+    // 1. Matikan warna aktif di semua tombol menu sidebar
     document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('menu-aktif'));
     
-    if (idHalaman === 'page-home') {
-        document.getElementById('btn-menu-home').classList.add('menu-aktif');
-        muatStatistikDashboard();
-    }
-    if (idHalaman === 'page-tagihan') {
-        document.getElementById('btn-menu-tagihan').classList.add('menu-aktif');
-        muatDataTagihan('BELUM_BAYAR');
-    }
-    if (idHalaman === 'page-siswa') {
-        document.getElementById('btn-menu-siswa').classList.add('menu-aktif');
-        muatDataSiswa(); 
-    }
-    if (idHalaman === 'page-guru') {
-        document.getElementById('btn-menu-guru').classList.add('menu-aktif');
-        muatDataGuru();
+    // 2. Beri warna biru pada tombol yang sedang diklik
+    const idTombol = 'btn-menu-' + idHalaman.replace('page-', '');
+    const tombolAktif = document.getElementById(idTombol);
+    if (tombolAktif) tombolAktif.classList.add('menu-aktif');
+
+    // 3. Tangkap wadah area konten utama
+    const kontenArea = document.getElementById('main-content');
+    kontenArea.innerHTML = '<p style="text-align: center; color: #64748b; margin-top: 50px;">Memuat halaman...</p>';
+
+    try {
+        // 4. Tarik file HTML pecahan (Gunakan timestamp otomatis agar tidak terhalang cache browser)
+        const response = await fetch(`${idHalaman}.html?v=${new Date().getTime()}`);
+        
+        if (!response.ok) throw new Error("File halaman tidak ditemukan di server GitHub.");
+        
+        // 5. Ubah respon menjadi teks HTML dan suntikkan ke dalam layar
+        const htmlCode = await response.text();
+        kontenArea.innerHTML = htmlCode;
+
+        // 6. Jalankan fungsi penarik data database sesuai halaman yang terbuka
+        if (idHalaman === 'page-home') {
+            muatStatistikDashboard();
+        } else if (idHalaman === 'page-tagihan') {
+            muatDataTagihan('BELUM_BAYAR');
+        } else if (idHalaman === 'page-siswa') {
+            muatDataSiswa();
+        } else if (idHalaman === 'page-guru') {
+            muatDataGuru();
+        }
+
+    } catch (error) {
+        console.error("Error muat halaman:", error);
+        kontenArea.innerHTML = `<p style="color: red; text-align: center; margin-top: 50px;">Gagal memuat sistem: ${error.message}</p>`;
     }
 }
 
