@@ -1,5 +1,5 @@
 /* style.css */
-body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
+body { font-family: Arial, sans-serif; padding: 0; margin: 0; background-color: #f0f2f5; }
 .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 input[type="email"], input[type="password"], button { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
 button { background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 4px;}
@@ -14,33 +14,29 @@ th { background-color: #f2f2f2; }
 #antrean-panel { background-color: #e3f2fd; padding: 15px; border-radius: 8px; border: 1px solid #90caf9; margin-top: 20px; }
 
 /* =========================================
-   GAYA KHUSUS ADMIN PANEL (FULL WIDTH)
+   GAYA ADMIN PANEL & RESPONSIVE LAYOUT
    ========================================= */
-/* Membuang margin default body saat masuk dashboard */
-body:has(.dashboard-wrapper) {
-    padding: 0;
-    background-color: #f0f2f5;
-}
-
 .dashboard-wrapper { 
     display: flex; 
-    min-height: 100vh; /* Tinggi penuh satu layar */
+    min-height: 100vh; 
     width: 100%;
+    box-sizing: border-box;
 }
 
-/* Sidebar Menu Full Height */
+/* Sidebar Menu */
 .sidebar { 
     width: 260px; 
-    background-color: #1e293b; /* Warna dark blue modern */
+    min-width: 260px;
+    background-color: #1e293b; 
     padding: 20px 15px; 
     color: white;
     display: flex;
     flex-direction: column;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    z-index: 10;
+    box-sizing: border-box;
 }
 .sidebar h3 { color: #f8fafc; text-align: center; margin-top: 10px; padding-bottom: 20px; border-bottom: 1px solid #334155; }
-.sidebar p { text-align: center; font-size: 14px; margin-bottom: 30px; color: #cbd5e1; }
+.sidebar p { text-align: center; font-size: 14px; margin-bottom: 20px; color: #cbd5e1; }
 .sidebar button { 
     background-color: transparent; 
     color: #94a3b8; 
@@ -55,7 +51,6 @@ body:has(.dashboard-wrapper) {
 .sidebar button:hover { background-color: #334155; color: white; }
 .sidebar button.menu-aktif { background-color: #3b82f6; color: white; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3); }
 
-/* Tombol Logout ditaruh di paling bawah (Mendorong konten ke atas) */
 .spacer { flex-grow: 1; }
 .sidebar .btn-logout { background-color: #ef4444; color: white; text-align: center; margin-top: auto; }
 .sidebar .btn-logout:hover { background-color: #dc2626; }
@@ -63,9 +58,10 @@ body:has(.dashboard-wrapper) {
 /* Area Konten Utama */
 .content-area { 
     flex: 1; 
-    padding: 40px; 
+    padding: 30px; 
     background-color: #f0f2f5; 
-    overflow-y: auto;
+    overflow-x: auto; /* Mencegah tabel merusak layout di layar kecil */
+    box-sizing: border-box;
 }
 .halaman { 
     display: none; 
@@ -84,18 +80,8 @@ body:has(.dashboard-wrapper) {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* =========================================
-   GAYA MODERENISASI TABEL & MODAL SISWA
-   ========================================= */
-/* Mempercantik tabel data siswa */
-#tabel-data-siswa tr {
-    transition: background-color 0.2s ease;
-}
-#tabel-data-siswa tr:hover {
-    background-color: #f8fafc;
-}
-
-/* Kotak Form Edit / Modal Mengambang */
+/* Modernisasi Tabel & Modal */
+#tabel-data-siswa tr:hover { background-color: #f8fafc; }
 .modal-form-edit {
     display: none;
     background-color: #ffffff;
@@ -104,9 +90,8 @@ body:has(.dashboard-wrapper) {
     border-radius: 10px;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     margin-bottom: 25px;
-    animation: fadeIn 0.3s ease-in-out;
 }
-.modal-form-edit input, .modal-form-edit select {
+.modal-form-edit input {
     padding: 8px 12px;
     border: 1px solid #cbd5e1;
     border-radius: 6px;
@@ -114,4 +99,29 @@ body:has(.dashboard-wrapper) {
     box-sizing: border-box;
     margin-top: 5px;
     margin-bottom: 12px;
+}
+
+/* =========================================
+   MEDIA QUERY KHUSUS HP (Layar < 768px)
+   ========================================= */
+@media (max-width: 768px) {
+    .dashboard-wrapper {
+        flex-direction: column; /* Sidebar pindah ke atas, konten di bawahnya */
+    }
+    .sidebar {
+        width: 100%;
+        min-width: 100%;
+        padding: 15px;
+        box-shadow: none;
+    }
+    .sidebar p { display: none; } /* Menyembunyikan teks halo di HP agar lebih ringkas */
+    .sidebar .spacer { display: none; }
+    .sidebar .btn-logout { margin-top: 10px; }
+    
+    .content-area {
+        padding: 15px; /* Mengurangi padding agar konten lebih luas di layar HP */
+    }
+    .halaman {
+        padding: 15px;
+    }
 }
