@@ -351,3 +351,50 @@ async function hapusSiswa(idSiswa) {
         muatDataSiswa(); // Refresh tabel setelah berhasil dihapus
     }
 }
+
+// ==========================================
+// FUNGSI GENERATOR TAGIHAN BULANAN MASSAL
+// ==========================================
+async function generateTagihanMassal() {
+    const inputBulan = document.getElementById('input-bulan-tagihan').value; // Format: "YYYY-MM"
+    if (!inputBulan) {
+        alert("Silakan pilih bulan dan tahun tagihan terlebih dahulu.");
+        return;
+    }
+
+    // Ubah format menjadi tanggal standar database (misal: "2026-08-01")
+    const bulanTagihanLengkap = inputBulan + "-01";
+
+    const konfirmasi = confirm(`Anda akan membuat tagihan massal untuk periode ${bulanTagihanLengkap.toUpperCase()} bagi SELURUH siswa aktif. Lanjutkan?`);
+    if (!konfirmasi) return;
+
+    // 1. Ambil seluruh data siswa (ID dan Nominal SPP masing-masing anak)
+    const { data: listSiswa, error: errorSiswa } = await db.from('siswa').select('id, nominal_spp');
+
+    if (errorSiswa || !listSiswa || listSiswa.length === 0) {
+        alert("Gagal memuat data siswa untuk digenerate: " + (errorSiswa ? errorSiswa.message : "Data siswa kosong"));
+        return;
+    }
+
+    // 2. Siapkan array data tagihan baru
+    const tagihanBaru = listSiswa.map(s => ({
+        siswa_id: s.id,
+        bulan_tagihan: bulanTagihanLengkap,
+        nominal: s.nominal_spp || 150000, // Default 150rb jika nominal kosong
+        status: 'BELUM_BAYAR'
+    }));
+
+    // 3. Masukkan secara massal (Bulk Insert) ke Supabase
+    // Catatan: Jika di database tabel tagihan_spp sudah diberi pengaman (Unique Constraint pada siswa_id + bulan_tagihan),
+    // sistem akan otomatis menolak duplikat jika bulan tersebut sudah pernah digenerate sebelumnya.
+    const { data, error } = await db.from('tagihan_spp').insert(tagihanBaru);
+
+    if (error) {
+        // Jika terjadi error (misalnya duplikat karena sudah pernah dibuat)
+        alert("Gagal generate tagihan: " + error.message + "\n(Kemungkinan tagihan untuk bulan ini sudah pernah dibuat sebelumnya).");
+    } else {
+        alert(`Berhasil! Tagihan untuk periode ${bulanTagihanLengkap} telah dibuat ke sistem.`);
+        // Refresh tabel agar langsung memunculkan tagihan baru yang baru saja dibuat
+        muatDataTagihan('BELUM_BAYAR');
+    }
+}
