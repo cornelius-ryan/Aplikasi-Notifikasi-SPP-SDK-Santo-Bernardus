@@ -5,10 +5,9 @@ const SUPABASE_URL = 'https://xlgnbgjlxpfukyredibl.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsZ25iZ2pseHBmdWt5cmVkaWJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MDQ4NDMsImV4cCI6MjEwMTM4MDg0M30.-6XK60RL0kz2U2diE5V8-Niphg2X1dWk8eIKvMB3_NY';
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Variabel Global
 let daftarAntrean = [];
 let indeksSaatIni = 0;
-let roleUserSaatIni = ''; // Menyimpan hak akses (admin/guru)
+let roleUserSaatIni = ''; 
 
 // ==========================================
 // 2. AUTENTIKASI & PROFIL
@@ -25,7 +24,7 @@ async function login() {
 
     if (error) {
         document.getElementById('pesan-error').innerText = "Login gagal: " + error.message;
-        tombol.innerText = 'Masuk';
+        tombol.innerText = 'Masuk ke Sistem';
     } else {
         tampilkanDashboard(data.user.id);
     }
@@ -47,13 +46,11 @@ async function tampilkanDashboard(userId) {
         return;
     }
 
-    // Simpan role ke variabel global untuk digunakan di dalam bukaMenu()
     roleUserSaatIni = profil.role; 
 
     document.getElementById('nama-user').innerText = profil.nama;
     document.getElementById('role-user').innerText = roleUserSaatIni.toUpperCase();
 
-    // Tampilkan/Sembunyikan menu samping (Sidebar) berdasarkan hak akses
     if (roleUserSaatIni === 'admin') {
         document.getElementById('btn-menu-tagihan').style.display = 'block';
         document.getElementById('btn-menu-siswa').style.display = 'block';
@@ -64,7 +61,6 @@ async function tampilkanDashboard(userId) {
         document.getElementById('btn-menu-guru').style.display = 'none';
     }
     
-    // Tarik dan tampilkan halaman pertama (Otomatis akan memuat data sesuai HTML yang ditarik)
     bukaMenu('page-home');
 }
 
@@ -72,28 +68,22 @@ async function tampilkanDashboard(userId) {
 // 3. NAVIGASI HALAMAN (MODULAR SPA)
 // ==========================================
 async function bukaMenu(idHalaman) {
-    // 1. Matikan warna aktif di semua tombol menu sidebar
     document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('menu-aktif'));
     
-    // 2. Beri warna biru pada tombol yang sedang diklik
     const idTombol = 'btn-menu-' + idHalaman.replace('page-', '');
     const tombolAktif = document.getElementById(idTombol);
     if (tombolAktif) tombolAktif.classList.add('menu-aktif');
 
-    // 3. Tangkap wadah area konten utama
     const kontenArea = document.getElementById('main-content');
     kontenArea.innerHTML = '<p style="text-align: center; color: #64748b; margin-top: 50px;">Memuat halaman...</p>';
 
     try {
-        // 4. Tarik file HTML pecahan (Gunakan timestamp otomatis agar tidak terhalang cache browser)
         const response = await fetch(`${idHalaman}.html?v=${new Date().getTime()}`);
         if (!response.ok) throw new Error("File halaman tidak ditemukan di server GitHub.");
         
-        // 5. Ubah respon menjadi teks HTML dan suntikkan ke dalam layar DOM
         const htmlCode = await response.text();
         kontenArea.innerHTML = htmlCode;
 
-        // 6. JALANKAN FUNGSI PENARIK DATA HANYA SETELAH HTML BERHASIL DISUNTIKKAN
         if (idHalaman === 'page-home') {
             if (roleUserSaatIni === 'admin') {
                 document.getElementById('panel-statistik-admin').style.display = 'grid';
@@ -156,6 +146,7 @@ async function muatDataTagihan(statusTarget = 'BELUM_BAYAR') {
         .order('bulan_tagihan', { ascending: false });
 
     const tbody = document.getElementById('tabel-tunggakan');
+    if(!tbody) return;
     tbody.innerHTML = '';
     document.getElementById('check-all').disabled = (statusTarget === 'LUNAS');
     
@@ -287,6 +278,7 @@ function batalAntrean() {
 async function muatDataSiswa() {
     const { data, error } = await db.from('siswa').select('*').order('kode_kelas').order('nama');
     const tbody = document.getElementById('tabel-data-siswa');
+    if(!tbody) return;
     tbody.innerHTML = '';
 
     if (error) return tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">Error: ${error.message}</td></tr>`;
@@ -388,7 +380,7 @@ function uploadCSV(event) {
                     alert("Gagal mengimpor data: " + error.message);
                 } else {
                     alert("Berhasil mengimpor seluruh data siswa!");
-                    muatDataSiswa(); // Refresh tabel
+                    muatDataSiswa(); 
                 }
             }
         } else {
@@ -405,6 +397,7 @@ function uploadCSV(event) {
 async function muatDataGuru() {
     const { data, error } = await db.from('profiles').select('*').order('nama');
     const tbody = document.getElementById('tabel-data-guru');
+    if(!tbody) return;
     tbody.innerHTML = '';
 
     if (error) return tbody.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Error: ${error.message}</td></tr>`;
@@ -433,3 +426,24 @@ function filterTabelTagihan() {
     
     rows.forEach(row => {
         if (row.cells.length < 3) return;
+        const namaSiswa = row.cells[1].innerText.toLowerCase();
+        const kelasSiswa = row.cells[2].innerText;
+        const cocokNama = namaSiswa.includes(keyword);
+        const cocokKelas = (kelasPilihan === "" || kelasSiswa === kelasPilihan);
+        
+        row.style.display = (cocokNama && cocokKelas) ? "" : "none";
+    });
+}
+
+function filterTabelSiswa() {
+    const keyword = document.getElementById('cari-siswa').value.toLowerCase();
+    const rows = document.querySelectorAll('#tabel-data-siswa tr');
+    
+    rows.forEach(row => {
+        if (row.cells.length < 3) return;
+        const nisSiswa = row.cells[1].innerText.toLowerCase();
+        const namaSiswa = row.cells[2].innerText.toLowerCase();
+        
+        row.style.display = (nisSiswa.includes(keyword) || namaSiswa.includes(keyword)) ? "" : "none";
+    });
+}
