@@ -53,6 +53,7 @@ async function tampilkanDashboard(userId) {
         document.getElementById('btn-menu-tagihan').style.display = 'block';
         document.getElementById('btn-menu-siswa').style.display = 'block';
         document.getElementById('panel-guru').style.display = 'none';
+        muatStatistikDashboard();
         muatDataTagihan('BELUM_BAYAR'); 
     } else {
         document.getElementById('btn-menu-tagihan').style.display = 'none';
@@ -225,6 +226,7 @@ function bukaMenu(idHalaman) {
 // Cari tombol yang memanggil fungsi ini, lalu beri warna biru dan muat datanya
     if (idHalaman === 'page-home') {
         document.getElementById('btn-menu-home').classList.add('menu-aktif');
+        muatStatistikDashboard();
     }
     if (idHalaman === 'page-tagihan') {
         document.getElementById('btn-menu-tagihan').classList.add('menu-aktif');
@@ -501,4 +503,21 @@ async function simpanPerubahanSiswa() {
         tutupFormEdit();
         muatDataSiswa(); // Muat ulang tabel siswa agar data terbaru langsung tampil
     }
+}
+
+// ==========================================
+// FUNGSI STATISTIK DASHBOARD UTAMA
+// ==========================================
+async function muatStatistikDashboard() {
+    // 1. Hitung total siswa
+    const { count: jumlahSiswa } = await db.from('siswa').select('*', { count: 'exact', head: true });
+    document.getElementById('stat-total-siswa').innerText = jumlahSiswa || 0;
+
+    // 2. Hitung total tagihan belum bayar
+    const { count: jumlahBelumBayar } = await db.from('tagihan_spp').select('*', { count: 'exact', head: true }).eq('status', 'BELUM_BAYAR');
+    document.getElementById('stat-total-tunggakan').innerText = jumlahBelumBayar || 0;
+
+    // 3. Hitung total tagihan lunas
+    const { count: jumlahLunas } = await db.from('tagihan_spp').select('*', { count: 'exact', head: true }).eq('status', 'LUNAS');
+    document.getElementById('stat-total-lunas').innerText = jumlahLunas || 0;
 }
