@@ -30,7 +30,7 @@ async function login() {
 async function tampilkanDashboard(userId) {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('dashboard-section').style.display = 'block';
-
+   
     // Tarik Profil
     const { data: profil } = await db.from('profiles').select('*').eq('id', userId).single();
     document.getElementById('nama-user').innerText = profil.nama;
@@ -40,6 +40,7 @@ async function tampilkanDashboard(userId) {
     if (profil.role === 'admin') {
         // Admin: Tampilkan menu tagihan di sidebar, dan panggil data tagihan
         document.getElementById('btn-menu-tagihan').style.display = 'block';
+        document.getElementById('btn-menu-siswa').style.display = 'block';
         document.getElementById('panel-guru').style.display = 'none';
         muatDataTagihan('BELUM_BAYAR'); 
     } else {
@@ -213,4 +214,78 @@ function bukaMenu(idHalaman) {
     // Cari tombol yang memanggil fungsi ini, lalu beri warna biru
     if (idHalaman === 'page-home') document.getElementById('btn-menu-home').classList.add('menu-aktif');
     if (idHalaman === 'page-tagihan') document.getElementById('btn-menu-tagihan').classList.add('menu-aktif');
+    if (idHalaman === 'page-siswa') document.getElementById('btn-menu-siswa').classList.add('menu-aktif');
+}
+
+// ==========================================
+// FUNGSI MANAJEMEN DATA SISWA (BULK ADD CSV)
+// ==========================================
+
+// 1. Fungsi Membuat dan Mengunduh Format Template CSV
+function downloadFormatCSV() {
+    // Header wajib huruf kecil dan sesuai nama kolom di database
+    const header = "nis,nama,kode_kelas,no_wa_ortu,nominal_spp\n";
+    // Contoh cara pengisian untuk acuan TU
+    const contoh = "2026001,Budi Santoso,5-A,6281234567890,150000\n"; 
+    
+    const csvContent = "data:text/csv;charset=utf-8," + header + contoh;
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "Format_Import_Siswa_SPP.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// 2. Fungsi Membaca dan Menyimpan File CSV ke Supabase
+async function uploadCSV(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Membaca isi file teks
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const text = e.target.result;
+        const baris = text.split("\n"); // Memisahkan data per baris (Enter)
+        const dataSiswaBaru = [];
+
+        // Mulai looping dari indeks 1 untuk melewati baris Header
+        for (let i = 1; i < baris.length; i++) {
+            if (baris[i].trim() === "") continue; // Lewati baris yang kosong di akhir file
+            
+            const kolom = baris[i].split(","); // Memisahkan data per koma
+            
+            if (kolom.length >= 5) {
+                dataSiswaBaru.push({
+                    nis: kolom[0].trim(),
+                    nama: kolom[1].trim(),
+                    kode_kelas: kolom[2].trim(),
+                    no_wa_ortu: kolom[3].trim(),
+                    nominal_spp: Number(kolom[4].trim())
+                });
+            }
+        }
+
+        if (dataSiswaBaru.length > 0) {
+            const konfirmasi = confirm(`Terbaca ${dataSiswaBaru.length} data siswa dari file. Lanjutkan simpan ke database?`);
+            if (konfirmasi) {
+                // Proses Bulk Insert ke Supabase
+                const { data, error } = await db.from('siswa').insert(dataSiswaBaru);
+                
+                if (error) {
+                    // Biasa error jika ada NIS yang kembar (karena NIS kita set UNIQUE di awal)
+                    alert("Gagal mengimpor data: " + error.message);
+                } else {
+                    alert("Berhasil mengimpor seluruh data siswa!");
+                    // Nanti kita panggil fungsi refresh tabel siswa di sini
+                }
+            }
+        } else {
+            alert("Tidak ada data yang valid untuk diimpor. Pastikan format CSV dipisahkan oleh koma.");
+        }
+        
+        event.target.value = ''; // Reset input file agar bisa upload file yang sama lagi jika perlu
+    };
+    reader.readAsText(file);
 }
