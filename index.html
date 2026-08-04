@@ -135,6 +135,36 @@
                         <button onclick="document.getElementById('file-csv').click()" style="background-color: #10b981; width: auto; padding: 8px 15px; font-size: 14px;">⬆️ Unggah File CSV</button>
                     </div>
                 </div>
+
+                <!-- FORM EDIT SISWA (Tersembunyi secara default) -->
+                <div id="form-edit-container" class="modal-form-edit">
+                    <h4 id="judul-form-edit" style="margin-top: 0; color: #1e293b;">✏️ Edit Data Siswa</h4>
+                    <input type="hidden" id="edit-id-siswa">
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label style="font-size: 13px; font-weight: bold; color: #475569;">NIS:</label>
+                            <input type="text" id="edit-nis" disabled style="background-color: #f1f5f9; cursor: not-allowed;">
+                        </div>
+                        <div>
+                            <label style="font-size: 13px; font-weight: bold; color: #475569;">Nama Lengkap:</label>
+                            <input type="text" id="edit-nama">
+                        </div>
+                        <div>
+                            <label style="font-size: 13px; font-weight: bold; color: #475569;">Kelas:</label>
+                            <input type="text" id="edit-kelas" placeholder="Contoh: 5-A">
+                        </div>
+                        <div>
+                            <label style="font-size: 13px; font-weight: bold; color: #475569;">Nomor WA Orang Tua:</label>
+                            <input type="text" id="edit-wa" placeholder="Contoh: 628123456789">
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button onclick="simpanPerubahanSiswa()" style="background-color: #2563eb; color: white; width: auto; padding: 8px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer;">💾 Simpan Perubahan</button>
+                        <button onclick="tutupFormEdit()" style="background-color: #64748b; color: white; width: auto; padding: 8px 15px; border-radius: 6px; border: none; cursor: pointer;">Batal</button>
+                    </div>
+                </div>
                 
                 <!-- Kotak Pencarian Siswa -->
                 <div style="margin-bottom: 15px;">
