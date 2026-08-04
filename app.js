@@ -53,7 +53,8 @@ async function tampilkanDashboard(userId) {
         document.getElementById('btn-menu-tagihan').style.display = 'block';
         document.getElementById('btn-menu-siswa').style.display = 'block';
         document.getElementById('panel-guru').style.display = 'none';
-        muatStatistikDashboard();
+        
+        muatStatistikDashboard(); // Panggil data statistik agar kotak tidak "..."
         muatDataTagihan('BELUM_BAYAR'); 
     } else {
         document.getElementById('btn-menu-tagihan').style.display = 'none';
@@ -515,7 +516,7 @@ async function muatStatistikDashboard() {
 
     // 2. Hitung total tagihan belum bayar
     const { count: jumlahBelumBayar } = await db.from('tagihan_spp').select('*', { count: 'exact', head: true }).eq('status', 'BELUM_BAYAR');
-    document.getElementById('stat-total-tunggakan').innerText = jumlahBelumBayar || 0;
+    document.getElementById('stat-total-tunggakan').innerText = jumlahBelumBayar || 0
 
     // 3. Hitung total tagihan lunas
     const { count: jumlahLunas } = await db.from('tagihan_spp').select('*', { count: 'exact', head: true }).eq('status', 'LUNAS');
