@@ -10,52 +10,63 @@ let daftarAntrean = [];
 let indeksSaatIni = 0;
 
 async function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const tombol = document.querySelector('#login-section button');
-    
-    tombol.innerText = 'Memproses...';
-    document.getElementById('pesan-error').innerText = '';
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const tombol = document.querySelector('#login-section button');
+    
+    console.log("Tombol masuk diklik, memproses email:", email); // Cek log ini di F12 Console
+    tombol.innerText = 'Memproses...';
+    document.getElementById('pesan-error').innerText = '';
 
-    const { data, error } = await db.auth.signInWithPassword({ email: email, password: password });
+    const { data, error } = await db.auth.signInWithPassword({ email: email, password: password });
 
-    if (error) {
-        document.getElementById('pesan-error').innerText = "Login gagal: " + error.message;
-        tombol.innerText = 'Masuk';
-    } else {
-        tampilkanDashboard(data.user.id);
-    }
+    if (error) {
+        console.error("Error login:", error.message);
+        document.getElementById('pesan-error').innerText = "Login gagal: " + error.message;
+        tombol.innerText = 'Masuk';
+    } else {
+        console.log("Login auth berhasil, user ID:", data.user.id);
+        tampilkanDashboard(data.user.id);
+    }
 }
 
 async function tampilkanDashboard(userId) {
-    document.getElementById('login-section').style.display = 'none';
-    document.getElementById('dashboard-section').style.display = 'block';
-   
-    // Tarik Profil
-    const { data: profil } = await db.from('profiles').select('*').eq('id', userId).single();
-    document.getElementById('nama-user').innerText = profil.nama;
-    document.getElementById('role-user').innerText = profil.role.toUpperCase();
+    console.log("Masuk ke fungsi tampilkanDashboard untuk ID:", userId);
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('dashboard-section').style.display = 'block';
 
-// Atur Tampilan Berdasarkan Role
-    if (profil.role === 'admin') {
-        // Admin: Tampilkan menu tagihan di sidebar, dan panggil data tagihan
-        document.getElementById('btn-menu-tagihan').style.display = 'block';
-        document.getElementById('btn-menu-siswa').style.display = 'block';
-        document.getElementById('panel-guru').style.display = 'none';
-        muatDataTagihan('BELUM_BAYAR'); 
-    } else {
-        // Guru: Menu tagihan disembunyikan, langsung tampilkan daftar siswa di home
-        document.getElementById('btn-menu-tagihan').style.display = 'none';
-        document.getElementById('panel-guru').style.display = 'block';
-        
-        const { data: siswa } = await db.from('siswa').select('*');
-        const listSiswa = document.getElementById('daftar-siswa');
-        listSiswa.innerHTML = '';
-        siswa.forEach(s => listSiswa.innerHTML += `<li>[${s.kode_kelas}] ${s.nama} - NIS: ${s.nis}</li>`);
-    }
+    // Tarik Profil
+    const { data: profil, error: errorProfil } = await db.from('profiles').select('*').eq('id', userId).single();
+    
+    if (errorProfil || !profil) {
+        console.error("Gagal ambil profil:", errorProfil ? errorProfil.message : "Profil tidak ditemukan di database!");
+        alert("Gagal memuat profil pengguna dari database. Pastikan akun ini sudah terdaftar di tabel profiles.");
+        return;
+    }
 
-    // Pastikan saat pertama kali login, yang terbuka selalu Dashboard Utama (Home)
-    bukaMenu('page-home');
+    console.log("Profil berhasil dimuat:", profil);
+    document.getElementById('nama-user').innerText = profil.nama;
+    document.getElementById('role-user').innerText = profil.role.toUpperCase();
+
+    // Atur Tampilan Berdasarkan Role
+    if (profil.role === 'admin') {
+        document.getElementById('btn-menu-tagihan').style.display = 'block';
+        document.getElementById('btn-menu-siswa').style.display = 'block';
+        document.getElementById('panel-guru').style.display = 'none';
+        muatDataTagihan('BELUM_BAYAR'); 
+    } else {
+        document.getElementById('btn-menu-tagihan').style.display = 'none';
+        document.getElementById('panel-guru').style.display = 'block';
+        
+        const { data: siswa } = await db.from('siswa').select('*');
+        const listSiswa = document.getElementById('daftar-siswa');
+        listSiswa.innerHTML = '';
+        if(siswa) {
+            siswa.forEach(s => listSiswa.innerHTML += `<li>[${s.kode_kelas}] ${s.nama} - NIS: ${s.nis}</li>`);
+        }
+    }
+
+    bukaMenu('page-home');
 }
 
 // Fungsi untuk memuat tabel berdasarkan status (LUNAS / BELUM_BAYAR)
