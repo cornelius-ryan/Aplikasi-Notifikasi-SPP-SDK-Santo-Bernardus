@@ -174,3 +174,21 @@ th {
     font-weight: 600;
 }
 tr:hover { background-color: #f8fafc; }
+
+/* Memperbaiki lebar kolom centang tabel agar pas dan tidak melebar */
+table th:first-child, 
+table td:first-child {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    text-align: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+table th:first-child input[type="checkbox"], 
+table td:first-child input[type="checkbox"] {
+    display: block;
+    margin: 0 auto;
+    cursor: pointer;
+}
