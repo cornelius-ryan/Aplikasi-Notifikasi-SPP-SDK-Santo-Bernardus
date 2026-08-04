@@ -191,3 +191,18 @@ async function logout() {
     await db.auth.signOut();
     window.location.reload();
 }
+
+// Fungsi untuk memindahkan tab menu halaman
+function bukaMenu(idHalaman) {
+    // 1. Sembunyikan semua halaman
+    document.querySelectorAll('.halaman').forEach(hal => hal.classList.remove('aktif'));
+    // 2. Munculkan halaman yang dipilih
+    document.getElementById(idHalaman).classList.add('aktif');
+
+    // 3. Ubah warna tombol menu di sidebar agar terlihat sedang aktif
+    document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('menu-aktif'));
+    
+    // Cari tombol yang memanggil fungsi ini, lalu beri warna biru
+    if (idHalaman === 'page-home') document.getElementById('btn-menu-home').classList.add('menu-aktif');
+    if (idHalaman === 'page-tagihan') document.getElementById('btn-menu-tagihan').classList.add('menu-aktif');
+}
