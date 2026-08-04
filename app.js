@@ -40,7 +40,7 @@ async function tampilkanDashboard(userId) {
     if (profil.role === 'admin') {
         document.getElementById('panel-guru').style.display = 'none';
         document.getElementById('panel-admin').style.display = 'block';
-        muatDataTunggakan(); 
+        muatDataTagihan('BELUM_BAYAR'); 
     } else {
         const { data: siswa } = await db.from('siswa').select('*');
         const listSiswa = document.getElementById('daftar-siswa');
@@ -49,33 +49,72 @@ async function tampilkanDashboard(userId) {
     }
 }
 
-async function muatDataTunggakan() {
+// Fungsi untuk memuat tabel berdasarkan status (LUNAS / BELUM_BAYAR)
+async function muatDataTagihan(statusTarget = 'BELUM_BAYAR') {
     const { data, error } = await db.from('tagihan_spp')
         .select(`id, bulan_tagihan, nominal, status, siswa ( nama, kode_kelas, no_wa_ortu )`)
-        .eq('status', 'BELUM_BAYAR');
+        .eq('status', statusTarget)
+        .order('bulan_tagihan', { ascending: false }); // Urutkan dari bulan terbaru
 
     const tbody = document.getElementById('tabel-tunggakan');
     tbody.innerHTML = '';
     
+    // Matikan centang master jika sedang melihat data Lunas (karena tidak perlu di-WA)
+    document.getElementById('check-all').disabled = (statusTarget === 'LUNAS');
+    
     if(data) {
         data.forEach(row => {
+            let tombolAksi = '';
+            let kotakCentang = '';
+            let warnaStatus = statusTarget === 'LUNAS' ? '#4CAF50' : '#ff9800';
+
+            // Tentukan tombol apa yang muncul berdasarkan status saat ini
+            if (statusTarget === 'BELUM_BAYAR') {
+                tombolAksi = `<button onclick="ubahStatusTagihan('${row.id}', 'LUNAS')" style="background-color: #4CAF50; color: white; padding: 6px 12px; font-size: 12px; margin: 0;">Tandai Lunas</button>`;
+                kotakCentang = `<input type="checkbox" class="chk-item" data-nama="${row.siswa.nama}" data-wa="${row.siswa.no_wa_ortu}" data-nominal="${row.nominal}" data-bulan="${row.bulan_tagihan}">`;
+            } else {
+                tombolAksi = `<button onclick="ubahStatusTagihan('${row.id}', 'BELUM_BAYAR')" style="background-color: #f44336; color: white; padding: 6px 12px; font-size: 12px; margin: 0;">Batal Lunas</button>`;
+                kotakCentang = `<input type="checkbox" disabled>`;
+            }
+
             tbody.innerHTML += `
                 <tr>
-                    <td style="text-align: center;">
-                        <input type="checkbox" class="chk-item" 
-                            data-nama="${row.siswa.nama}" 
-                            data-wa="${row.siswa.no_wa_ortu}" 
-                            data-nominal="${row.nominal}" 
-                            data-bulan="${row.bulan_tagihan}">
-                    </td>
+                    <td style="text-align: center;">${kotakCentang}</td>
                     <td>${row.siswa.nama}</td>
                     <td>${row.siswa.kode_kelas}</td>
                     <td>${row.bulan_tagihan}</td>
                     <td>Rp${row.nominal.toLocaleString('id-ID')}</td>
-                    <td>${row.siswa.no_wa_ortu}</td>
+                    <td><span style="background-color: ${warnaStatus}; color: white; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold;">${statusTarget}</span></td>
+                    <td>${tombolAksi}</td>
                 </tr>
             `;
         });
+    }
+}
+
+// Fungsi untuk mengeksekusi perubahan status ke Database Supabase
+async function ubahStatusTagihan(idTagihan, statusBaru) {
+    // Memunculkan kotak konfirmasi (Mencegah admin salah klik)
+    let pesanKonfirmasi = statusBaru === 'LUNAS' 
+        ? 'Apakah Anda yakin tagihan ini SUDAH DIBAYAR?' 
+        : 'AWAS! Batalkan status lunas dan kembalikan ke MENUNGGAK?';
+        
+    if (!confirm(pesanKonfirmasi)) return; // Jika admin klik 'Cancel', batalkan proses
+
+    // Jika lunas, catat tanggal hari ini. Jika batal, kembalikan ke kosong (null)
+    const tanggalBayar = statusBaru === 'LUNAS' ? new Date().toISOString() : null;
+
+    // Kirim perintah UPDATE ke Supabase
+    const { error } = await db.from('tagihan_spp')
+        .update({ status: statusBaru, tanggal_bayar: tanggalBayar })
+        .eq('id', idTagihan);
+
+    if (error) {
+        alert("Gagal memperbarui data: " + error.message);
+    } else {
+        // Jika berhasil, muat ulang tabel di halaman yang sama agar data ter-refresh
+        const statusSedangDilihat = statusBaru === 'LUNAS' ? 'BELUM_BAYAR' : 'LUNAS';
+        muatDataTagihan(statusSedangDilihat);
     }
 }
 
