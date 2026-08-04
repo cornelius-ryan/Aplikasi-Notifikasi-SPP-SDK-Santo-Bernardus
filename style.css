@@ -14,19 +14,72 @@ th { background-color: #f2f2f2; }
 #antrean-panel { background-color: #e3f2fd; padding: 15px; border-radius: 8px; border: 1px solid #90caf9; margin-top: 20px; }
 
 /* =========================================
-   GAYA KHUSUS ADMIN PANEL (SIDEBAR LAYOUT)
+   GAYA KHUSUS ADMIN PANEL (FULL WIDTH)
    ========================================= */
-.admin-layout { display: flex; align-items: flex-start; gap: 20px; margin-top: 20px;}
+/* Membuang margin default body saat masuk dashboard */
+body:has(.dashboard-wrapper) {
+    padding: 0;
+    background-color: #f0f2f5;
+}
 
-/* Sidebar Menu */
-.sidebar { width: 250px; background-color: #2c3e50; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.sidebar h3 { color: #ecf0f1; text-align: center; margin-top: 0; padding-bottom: 15px; border-bottom: 1px solid #34495e; }
-.sidebar button { background-color: transparent; color: #bdc3c7; text-align: left; padding: 12px 15px; margin: 5px 0; font-size: 15px; font-weight: bold; transition: 0.3s; }
-.sidebar button:hover, .sidebar button.menu-aktif { background-color: #3498db; color: white; border-radius: 5px; }
-.sidebar .btn-logout { background-color: #e74c3c; color: white; margin-top: 30px; text-align: center; }
-.sidebar .btn-logout:hover { background-color: #c0392b; }
+.dashboard-wrapper { 
+    display: flex; 
+    min-height: 100vh; /* Tinggi penuh satu layar */
+    width: 100%;
+}
+
+/* Sidebar Menu Full Height */
+.sidebar { 
+    width: 260px; 
+    background-color: #1e293b; /* Warna dark blue modern */
+    padding: 20px 15px; 
+    color: white;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    z-index: 10;
+}
+.sidebar h3 { color: #f8fafc; text-align: center; margin-top: 10px; padding-bottom: 20px; border-bottom: 1px solid #334155; }
+.sidebar p { text-align: center; font-size: 14px; margin-bottom: 30px; color: #cbd5e1; }
+.sidebar button { 
+    background-color: transparent; 
+    color: #94a3b8; 
+    text-align: left; 
+    padding: 12px 20px; 
+    margin: 4px 0; 
+    font-size: 15px; 
+    font-weight: 600; 
+    border-radius: 6px;
+    transition: all 0.2s ease; 
+}
+.sidebar button:hover { background-color: #334155; color: white; }
+.sidebar button.menu-aktif { background-color: #3b82f6; color: white; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3); }
+
+/* Tombol Logout ditaruh di paling bawah (Mendorong konten ke atas) */
+.spacer { flex-grow: 1; }
+.sidebar .btn-logout { background-color: #ef4444; color: white; text-align: center; margin-top: auto; }
+.sidebar .btn-logout:hover { background-color: #dc2626; }
 
 /* Area Konten Utama */
-.content-area { flex: 1; }
-.halaman { display: none; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.halaman.aktif { display: block; } /* Memunculkan halaman yang dipilih */
+.content-area { 
+    flex: 1; 
+    padding: 40px; 
+    background-color: #f0f2f5; 
+    overflow-y: auto;
+}
+.halaman { 
+    display: none; 
+    background: white; 
+    padding: 30px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); 
+}
+.halaman.aktif { 
+    display: block; 
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
