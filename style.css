@@ -1,0 +1,14 @@
+/* style.css */
+body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
+.container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+input[type="email"], input[type="password"], button { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
+button { background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 4px;}
+button:hover { background-color: #45a049; }
+
+/* Gaya Khusus Tabel & Admin Panel */
+table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+th { background-color: #f2f2f2; }
+.btn-biru { background-color: #2196F3; width: auto; padding: 10px 20px; margin-top: 15px;}
+.btn-merah { background-color: #f44336; width: auto; padding: 10px 20px;}
+#antrean-panel { background-color: #e3f2fd; padding: 15px; border-radius: 8px; border: 1px solid #90caf9; margin-top: 20px; }
