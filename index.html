@@ -4,55 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem SPP - Santo Bernardus</title>
-    <!-- Memanggil library Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Memanggil file CSS eksternal -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 
-    <!-- HALAMAN LOGIN -->
-    <div id="login-section" class="container" style="max-width: 400px;">
-        <h2>Login Sistem SPP</h2>
+    <div id="login-section" class="container modal-login">
+        <h2 style="text-align: center; color: #1e293b; margin-bottom: 20px;">Login Sistem SPP</h2>
         <input type="email" id="email" placeholder="Masukkan Email">
         <input type="password" id="password" placeholder="Masukkan Password">
-        <button onclick="login()">Masuk</button>
-        <p id="pesan-error" style="color: red;"></p>
+        <button onclick="login()" class="btn-primary" style="margin-top: 15px;">Masuk</button>
+        <p id="pesan-error" style="color: #ef4444; text-align: center; font-size: 14px; margin-top: 10px;"></p>
     </div>
 
-    <!-- HALAMAN DASHBOARD (Layout Modern) -->
     <div id="dashboard-section" class="dashboard-wrapper" style="display:none;">
         
-        <!-- SIDEBAR KIRI -->
-        <div class="sidebar">
+        <aside class="sidebar">
             <h3>Sistem SPP</h3>
             <p>
                 Halo, <b id="nama-user">...</b><br>
-                <span id="role-user" style="color: #fbbf24; font-size: 12px; letter-spacing: 1px;">...</span>
+                <span id="role-user" class="badge-role">...</span>
             </p>
             
-            <button id="btn-menu-home" class="menu-btn menu-aktif" onclick="bukaMenu('page-home')">🏠 Dashboard</button>
-            <button id="btn-menu-tagihan" class="menu-btn" onclick="bukaMenu('page-tagihan')" style="display: none;">💰 Data Tagihan</button>
-            <button id="btn-menu-siswa" class="menu-btn" onclick="bukaMenu('page-siswa')" style="display: none;">🎓 Data Siswa</button>
-            <button id="btn-menu-guru" class="menu-btn" onclick="bukaMenu('page-guru')" style="display: none;">👩‍🏫 Data Guru</button>
+            <nav class="menu-navigasi">
+                <button id="btn-menu-home" class="menu-btn menu-aktif" onclick="bukaMenu('page-home')">🏠 Dashboard</button>
+                <button id="btn-menu-tagihan" class="menu-btn" onclick="bukaMenu('page-tagihan')" style="display: none;">💰 Data Tagihan</button>
+                <button id="btn-menu-siswa" class="menu-btn" onclick="bukaMenu('page-siswa')" style="display: none;">🎓 Data Siswa</button>
+                <button id="btn-menu-guru" class="menu-btn" onclick="bukaMenu('page-guru')" style="display: none;">👩‍🏫 Data Guru</button>
+            </nav>
             
-            <div class="spacer"></div> <!-- Pendorong tombol logout ke bawah -->
-
+            <div class="spacer"></div>
             <button onclick="logout()" class="btn-logout">🚪 Keluar (Logout)</button>
-        </div>
+        </aside>
 
-        <!-- AREA KONTEN KANAN -->
-        <div class="content-area">
+        <main class="content-area">
             
-           <!-- HALAMAN 1: DASHBOARD (HOME) -->
-            <div id="page-home" class="halaman aktif">
-                <h2 style="margin-top: 0;">Dashboard Utama</h2>
-                <hr style="border: 0; height: 1px; background: #e2e8f0; margin: 20px 0;">
-                <p style="color: #475569; margin-bottom: 25px;">Ringkasan cepat data administrasi keuangan sekolah.</p>
+            <section id="page-home" class="halaman aktif">
+                <h2>Dashboard Utama</h2>
+                <hr class="divider">
+                <p class="subtitle">Ringkasan cepat data administrasi keuangan sekolah.</p>
                 
-                <!-- Kotak Statistik Ringkasan -->
                 <div class="stats-grid" id="panel-statistik-admin">
-                    <div class="stat-card">
+                    <div class="stat-card biru">
                         <h4>Total Siswa Aktif</h4>
                         <p class="nilai" id="stat-total-siswa">...</p>
                     </div>
@@ -68,51 +61,45 @@
 
                 <div id="panel-guru" style="display: none; margin-top: 30px;">
                     <h3 style="color: #334155;">Daftar Siswa di Kelas Anda:</h3>
-                    <ul id="daftar-siswa" style="color: #475569; line-height: 1.8;"></ul>
+                    <ul id="daftar-siswa" class="list-siswa-guru"></ul>
                 </div>
-            </div>
+            </section>
 
-            <!-- HALAMAN 2: DATA TAGIHAN (KHUSUS ADMIN) -->
-            <div id="page-tagihan" class="halaman">
-                
-                <!-- PANEL GENERATOR TAGIHAN BULANAN -->
-                <div style="background-color: #eff6ff; padding: 20px; border-radius: 8px; border: 1px solid #bfdbfe; margin-bottom: 25px;">
-                    <h4 style="margin-top: 0; color: #1e40af;">⚙️ Generator Tagihan Bulanan (Massal)</h4>
-                    <p style="font-size: 14px; color: #3b82f6; margin-bottom: 15px;">Pilih bulan dan tahun, lalu sistem akan otomatis membuatkan tagihan untuk seluruh siswa.</p>
-                    
+            <section id="page-tagihan" class="halaman">
+                <div class="panel-info">
+                    <h4 style="margin-top: 0; color: #1e40af;">⚙️ Generator Tagihan Bulanan</h4>
+                    <p style="font-size: 14px; color: #3b82f6; margin-bottom: 15px;">Sistem otomatis membuatkan tagihan untuk seluruh siswa aktif.</p>
                     <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
                         <div>
                             <label style="display: block; font-size: 13px; font-weight: bold; color: #1e3a8a; margin-bottom: 5px;">Pilih Bulan & Tahun:</label>
-                            <input type="month" id="input-bulan-tagihan" value="2026-08" style="padding: 8px; border: 1px solid #93c5fd; border-radius: 6px; width: 180px;">
+                            <input type="month" id="input-bulan-tagihan" value="2026-08" class="input-modern">
                         </div>
-                        <button onclick="generateTagihanMassal()" style="background-color: #2563eb; color: white; width: auto; padding: 9px 20px; font-size: 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold;">⚡ Generate Tagihan Massal</button>
+                        <button onclick="generateTagihanMassal()" class="btn-primary">⚡ Generate Massal</button>
                     </div>
                 </div>
 
-                <h2 style="margin-top: 0;">Kelola Data Tagihan SPP</h2>
-                <hr style="border: 0; height: 1px; background: #e2e8f0; margin: 20px 0;">
+                <h2>Kelola Data Tagihan SPP</h2>
+                <hr class="divider">
                 
-                <div style="margin-bottom: 20px;">
-                    <button class="btn-biru" onclick="muatDataTagihan('BELUM_BAYAR')" style="margin-top: 0; width: auto; padding: 10px 20px; border-radius: 6px;">Lihat Tunggakan</button>
-                    <button class="btn-biru" onclick="muatDataTagihan('LUNAS')" style="margin-top: 0; width: auto; padding: 10px 20px; background-color: #8b5cf6; border-radius: 6px; margin-left: 10px;">Lihat Sudah Lunas</button>
+                <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-primary" onclick="muatDataTagihan('BELUM_BAYAR')">Lihat Tunggakan</button>
+                    <button class="btn-ungu" onclick="muatDataTagihan('LUNAS')">Lihat Sudah Lunas</button>
                 </div>
                 
-                <!-- Kotak Filter & Pencarian Tagihan -->
-                <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
-                    <input type="text" id="cari-tagihan" placeholder="🔍 Cari nama siswa..." onkeyup="filterTabelTagihan()" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; width: 250px; margin: 0;">
-                    <select id="filter-kelas-tagihan" onchange="filterTabelTagihan()" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; margin: 0;">
+                <div class="filter-bar">
+                    <input type="text" id="cari-tagihan" placeholder="🔍 Cari nama siswa..." onkeyup="filterTabelTagihan()" class="input-modern">
+                    <select id="filter-kelas-tagihan" onchange="filterTabelTagihan()" class="input-modern">
                         <option value="">Semua Kelas</option>
                         <option value="5-A">Kelas 5-A</option>
                         <option value="5-B">Kelas 5-B</option>
                     </select>
                 </div>
 
-               <!-- Pembungkus Tabel Agar Rapi & Tidak Morat-marit -->
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
-                                <th style="text-align: center; width: 40px;"><input type="checkbox" id="check-all" onclick="centangSemua()"></th>
+                                <th class="col-center"><input type="checkbox" id="check-all" onclick="centangSemua()"></th>
                                 <th>Nama Siswa</th>
                                 <th>Kelas</th>
                                 <th>Bulan Tagihan</th>
@@ -121,128 +108,112 @@
                                 <th>Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="tabel-tunggakan">
-                            <!-- Data masuk via JS -->
-                        </tbody>
+                        <tbody id="tabel-tunggakan"></tbody>
                     </table>
                 </div>
                 
-                <button class="btn-biru" onclick="siapkanAntrean()" style="margin-top: 25px; border-radius: 6px;">Tarik Data Centang & Siapkan Antrean WA</button>
+                <button class="btn-primary" onclick="siapkanAntrean()" style="margin-top: 15px;">Tarik Data Centang & Siapkan Antrean WA</button>
 
-                <!-- KOTAK EKSEKUSI ANTREAN -->
-                <div id="antrean-panel" style="display: none; background-color: #f0fdf4; border: 1px solid #bbf7d0;">
+                <div id="antrean-panel" class="panel-success" style="display: none;">
                     <h4 style="color: #166534; margin-top: 0;">Proses Antrean WhatsApp</h4>
-                    <p id="status-antrean" style="color: #15803d;">Menunggu...</p>
-                    <button id="btn-kirim-wa" onclick="kirimWaSekarang()" style="background-color: #22c55e; width: auto; padding: 12px 25px; font-size: 15px; font-weight: bold; border-radius: 6px;">Kirim Pesan Sekarang</button>
-                    <button onclick="batalAntrean()" class="btn-merah" style="margin-left: 10px; border-radius: 6px;">Batalkan Antrean</button>
+                    <p id="status-antrean" style="color: #15803d; margin-bottom: 15px;">Menunggu...</p>
+                    <button id="btn-kirim-wa" onclick="kirimWaSekarang()" class="btn-hijau">Kirim Pesan Sekarang</button>
+                    <button onclick="batalAntrean()" class="btn-merah">Batalkan Antrean</button>
                 </div>
-            </div> <!-- Akhir dari div page-tagihan -->
+            </section>
 
-            <!-- HALAMAN 3: DATA SISWA (KHUSUS ADMIN) -->
-            <div id="page-siswa" class="halaman">
-                <h2 style="margin-top: 0;">Manajemen Data Siswa</h2>
-                <hr style="border: 0; height: 1px; background: #e2e8f0; margin: 20px 0;">
+            <section id="page-siswa" class="halaman">
+                <h2>Manajemen Data Siswa</h2>
+                <hr class="divider">
                 
-                <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 1px dashed #cbd5e1; margin-bottom: 20px;">
+                <div class="panel-dashed">
                     <h4 style="margin-top: 0; color: #334155;">Tambah Siswa Massal (Import CSV)</h4>
-                    <p style="font-size: 14px; color: #64748b; margin-bottom: 15px;">Unduh format template, isi datanya di Excel, lalu *Save As* sebagai CSV untuk diunggah ke sini.</p>
-                    
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <button onclick="downloadFormatCSV()" style="background-color: #3b82f6; width: auto; padding: 8px 15px; font-size: 14px;">⬇️ Unduh Template CSV</button>
-                        
-                        <!-- Input File tersembunyi, dipicu oleh tombol -->
+                    <p style="font-size: 14px; color: #64748b; margin-bottom: 15px;">Unduh template, isi di Excel, lalu unggah format CSV ke sini.</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="downloadFormatCSV()" class="btn-primary">⬇️ Unduh Template</button>
                         <input type="file" id="file-csv" accept=".csv" style="display: none;" onchange="uploadCSV(event)">
-                        <button onclick="document.getElementById('file-csv').click()" style="background-color: #10b981; width: auto; padding: 8px 15px; font-size: 14px;">⬆️ Unggah File CSV</button>
+                        <button onclick="document.getElementById('file-csv').click()" class="btn-hijau">⬆️ Unggah CSV</button>
                     </div>
                 </div>
 
-                <!-- FORM EDIT SISWA (Tersembunyi secara default) -->
                 <div id="form-edit-container" class="modal-form-edit">
-                    <h4 id="judul-form-edit" style="margin-top: 0; color: #1e293b;">✏️ Edit Data Siswa</h4>
+                    <h4 id="judul-form-edit" style="margin-top: 0; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">✏️ Edit Data / Mutasi Siswa</h4>
                     <input type="hidden" id="edit-id-siswa">
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="grid-form">
                         <div>
-                            <label style="font-size: 13px; font-weight: bold; color: #475569;">NIS:</label>
-                            <input type="text" id="edit-nis" disabled style="background-color: #f1f5f9; cursor: not-allowed;">
+                            <label>NIS:</label>
+                            <input type="text" id="edit-nis" disabled class="input-disabled">
                         </div>
                         <div>
-                            <label style="font-size: 13px; font-weight: bold; color: #475569;">Nama Lengkap:</label>
-                            <input type="text" id="edit-nama">
+                            <label>Nama Lengkap:</label>
+                            <input type="text" id="edit-nama" class="input-modern">
                         </div>
                         <div>
-                            <label style="font-size: 13px; font-weight: bold; color: #475569;">Kelas:</label>
-                            <input type="text" id="edit-kelas" placeholder="Contoh: 5-A">
+                            <label>Kelas:</label>
+                            <input type="text" id="edit-kelas" placeholder="Contoh: 5-A" class="input-modern">
                         </div>
                         <div>
-                            <label style="font-size: 13px; font-weight: bold; color: #475569;">Nomor WA Orang Tua:</label>
-                            <input type="text" id="edit-wa" placeholder="Contoh: 628123456789">
+                            <label>Nomor WA Orang Tua:</label>
+                            <input type="text" id="edit-wa" placeholder="Contoh: 628123456789" class="input-modern">
                         </div>
                     </div>
                     
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <button onclick="simpanPerubahanSiswa()" style="background-color: #2563eb; color: white; width: auto; padding: 8px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer;">💾 Simpan Perubahan</button>
-                        <button onclick="tutupFormEdit()" style="background-color: #64748b; color: white; width: auto; padding: 8px 15px; border-radius: 6px; border: none; cursor: pointer;">Batal</button>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button onclick="simpanPerubahanSiswa()" class="btn-primary">💾 Simpan Perubahan</button>
+                        <button onclick="tutupFormEdit()" class="btn-abu">Batal</button>
                     </div>
                 </div>
                 
-                <!-- Kotak Pencarian Siswa -->
-                <div style="margin-bottom: 15px;">
-                    <input type="text" id="cari-siswa" placeholder="🔍 Cari nama atau NIS siswa..." onkeyup="filterTabelSiswa()" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; width: 300px; margin: 0;">
+                <div class="filter-bar">
+                    <input type="text" id="cari-siswa" placeholder="🔍 Cari nama atau NIS siswa..." onkeyup="filterTabelSiswa()" class="input-modern" style="width: 100%; max-width: 350px;">
                 </div>
                 
-                <!-- Tabel Menampilkan Daftar Siswa -->
-                <div style="overflow-x: auto;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 50px; text-align: center;">No</th>
-                                <th>NIS</th>
-                                <th>Nama Lengkap</th>
-                                <th>Kelas</th>
-                                <th>Nomor WA</th>
-                                <th style="width: 80px;">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabel-data-siswa">
-                            <!-- Data siswa akan dimuat di sini oleh Javascript -->
-                            <tr><td colspan="6" style="text-align:center; color:#64748b;">Memuat data...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div> <!-- Akhir dari div page-siswa -->
-
-            <!-- HALAMAN 4: DATA GURU / WALI KELAS (KHUSUS ADMIN) -->
-            <div id="page-guru" class="halaman">
-                <h2 style="margin-top: 0;">Manajemen Data Guru & Wali Kelas</h2>
-                <hr style="border: 0; height: 1px; background: #e2e8f0; margin: 20px 0;">
-                
-                <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">Daftar guru atau wali kelas yang terdaftar beserta kelas yang diampu.</p>
-                
-                <!-- Tabel Menampilkan Daftar Guru -->
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 50px; text-align: center;">No</th>
+                                <th class="col-center">No</th>
+                                <th>NIS</th>
+                                <th>Nama Lengkap</th>
+                                <th>Kelas</th>
+                                <th>Nomor WA</th>
+                                <th style="width: 130px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel-data-siswa">
+                            <tr><td colspan="6" style="text-align:center; color:#64748b;">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="page-guru" class="halaman">
+                <h2>Manajemen Data Guru & Wali Kelas</h2>
+                <hr class="divider">
+                <p class="subtitle">Daftar guru atau wali kelas yang terdaftar beserta hak aksesnya.</p>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="col-center">No</th>
                                 <th>Nama Lengkap</th>
                                 <th>Email Akun</th>
                                 <th>Role / Hak Akses</th>
-                                <th style="width: 80px;">Aksi</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody id="tabel-data-guru">
-                            <!-- Data guru akan dimuat di sini oleh Javascript -->
                             <tr><td colspan="5" style="text-align:center; color:#64748b;">Memuat data guru...</td></tr>
                         </tbody>
                     </table>
                 </div>
-            </div> <!-- Akhir dari div page-guru -->
+            </section>
 
-        </div> <!-- Akhir dari content-area -->
-    </div> <!-- Akhir dari dashboard-wrapper -->
+        </main>
+    </div>
 
-    <!-- Memanggil file Javascript eksternal (Harus di bagian paling bawah body) -->
-    <script src="app.js"></script>
+    <script src="app.js?v=10"></script>
 </body>
 </html>
