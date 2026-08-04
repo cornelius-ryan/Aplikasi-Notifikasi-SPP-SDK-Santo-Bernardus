@@ -5,8 +5,10 @@ const SUPABASE_URL = 'https://xlgnbgjlxpfukyredibl.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsZ25iZ2pseHBmdWt5cmVkaWJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MDQ4NDMsImV4cCI6MjEwMTM4MDg0M30.-6XK60RL0kz2U2diE5V8-Niphg2X1dWk8eIKvMB3_NY';
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Variabel Global
 let daftarAntrean = [];
 let indeksSaatIni = 0;
+let roleUserSaatIni = ''; // Menyimpan hak akses (admin/guru)
 
 // ==========================================
 // 2. AUTENTIKASI & PROFIL
@@ -45,38 +47,29 @@ async function tampilkanDashboard(userId) {
         return;
     }
 
-    document.getElementById('nama-user').innerText = profil.nama;
-    document.getElementById('role-user').innerText = profil.role.toUpperCase();
+    // Simpan role ke variabel global untuk digunakan di dalam bukaMenu()
+    roleUserSaatIni = profil.role; 
 
-    if (profil.role === 'admin') {
+    document.getElementById('nama-user').innerText = profil.nama;
+    document.getElementById('role-user').innerText = roleUserSaatIni.toUpperCase();
+
+    // Tampilkan/Sembunyikan menu samping (Sidebar) berdasarkan hak akses
+    if (roleUserSaatIni === 'admin') {
         document.getElementById('btn-menu-tagihan').style.display = 'block';
         document.getElementById('btn-menu-siswa').style.display = 'block';
         document.getElementById('btn-menu-guru').style.display = 'block';
-        document.getElementById('panel-guru').style.display = 'none';
-        
-        muatStatistikDashboard();
-        muatDataTagihan('BELUM_BAYAR');
     } else {
         document.getElementById('btn-menu-tagihan').style.display = 'none';
-        document.getElementById('panel-guru').style.display = 'block';
-        
-        const { data: siswa } = await db.from('siswa').select('*');
-        const listSiswa = document.getElementById('daftar-siswa');
-        listSiswa.innerHTML = '';
-        if(siswa) {
-            siswa.forEach(s => {
-                listSiswa.innerHTML += `<li><span class="badge-role">${s.kode_kelas}</span> ${s.nama} - NIS: ${s.nis}</li>`;
-            });
-        }
+        document.getElementById('btn-menu-siswa').style.display = 'none';
+        document.getElementById('btn-menu-guru').style.display = 'none';
     }
+    
+    // Tarik dan tampilkan halaman pertama (Otomatis akan memuat data sesuai HTML yang ditarik)
     bukaMenu('page-home');
 }
 
 // ==========================================
-// 3. NAVIGASI HALAMAN (SPA) & STATISTIK
-// ==========================================
-// ==========================================
-// FUNGSI NAVIGASI HALAMAN (MODULAR SPA)
+// 3. NAVIGASI HALAMAN (MODULAR SPA)
 // ==========================================
 async function bukaMenu(idHalaman) {
     // 1. Matikan warna aktif di semua tombol menu sidebar
@@ -94,16 +87,23 @@ async function bukaMenu(idHalaman) {
     try {
         // 4. Tarik file HTML pecahan (Gunakan timestamp otomatis agar tidak terhalang cache browser)
         const response = await fetch(`${idHalaman}.html?v=${new Date().getTime()}`);
-        
         if (!response.ok) throw new Error("File halaman tidak ditemukan di server GitHub.");
         
-        // 5. Ubah respon menjadi teks HTML dan suntikkan ke dalam layar
+        // 5. Ubah respon menjadi teks HTML dan suntikkan ke dalam layar DOM
         const htmlCode = await response.text();
         kontenArea.innerHTML = htmlCode;
 
-        // 6. Jalankan fungsi penarik data database sesuai halaman yang terbuka
+        // 6. JALANKAN FUNGSI PENARIK DATA HANYA SETELAH HTML BERHASIL DISUNTIKKAN
         if (idHalaman === 'page-home') {
-            muatStatistikDashboard();
+            if (roleUserSaatIni === 'admin') {
+                document.getElementById('panel-statistik-admin').style.display = 'grid';
+                document.getElementById('panel-guru').style.display = 'none';
+                muatStatistikDashboard();
+            } else {
+                document.getElementById('panel-statistik-admin').style.display = 'none';
+                document.getElementById('panel-guru').style.display = 'block';
+                muatDaftarSiswaGuru();
+            }
         } else if (idHalaman === 'page-tagihan') {
             muatDataTagihan('BELUM_BAYAR');
         } else if (idHalaman === 'page-siswa') {
@@ -118,6 +118,9 @@ async function bukaMenu(idHalaman) {
     }
 }
 
+// ==========================================
+// 4. MODUL DASHBOARD & STATISTIK
+// ==========================================
 async function muatStatistikDashboard() {
     const { count: jumlahSiswa } = await db.from('siswa').select('*', { count: 'exact', head: true });
     document.getElementById('stat-total-siswa').innerText = jumlahSiswa || 0;
@@ -129,8 +132,22 @@ async function muatStatistikDashboard() {
     document.getElementById('stat-total-lunas').innerText = jumlahLunas || 0;
 }
 
+async function muatDaftarSiswaGuru() {
+    const { data: siswa } = await db.from('siswa').select('*');
+    const listSiswa = document.getElementById('daftar-siswa');
+    listSiswa.innerHTML = '';
+    
+    if(siswa && siswa.length > 0) {
+        siswa.forEach(s => {
+            listSiswa.innerHTML += `<li><span class="badge-role">${s.kode_kelas}</span> ${s.nama} - NIS: ${s.nis}</li>`;
+        });
+    } else {
+        listSiswa.innerHTML = '<li style="color: #64748b;">Belum ada data siswa di kelas Anda.</li>';
+    }
+}
+
 // ==========================================
-// 4. MODUL TAGIHAN & WA
+// 5. MODUL TAGIHAN & WA
 // ==========================================
 async function muatDataTagihan(statusTarget = 'BELUM_BAYAR') {
     const { data, error } = await db.from('tagihan_spp')
@@ -187,8 +204,12 @@ async function generateTagihanMassal() {
     }));
 
     const { error } = await db.from('tagihan_spp').insert(tagihanBaru);
-    if (error) alert("Gagal (mungkin tagihan bulan ini sudah pernah dibuat): " + error.message);
-    else { alert("Berhasil generate tagihan!"); muatDataTagihan('BELUM_BAYAR'); }
+    if (error) {
+        alert("Gagal (mungkin tagihan bulan ini sudah pernah dibuat): " + error.message);
+    } else { 
+        alert(`Berhasil generate tagihan massal periode ${bulanTagihanLengkap}!`); 
+        muatDataTagihan('BELUM_BAYAR'); 
+    }
 }
 
 async function ubahStatusTagihan(idTagihan, statusBaru) {
@@ -245,17 +266,23 @@ function updateLayarAntrean() {
 }
 
 function kirimWaSekarang() {
-    const t = daftarAntrean[indeksSaatIni];
-    const teks = `Halo Bapak/Ibu Wali Murid dari *${t.nama}*,\n\nIni pengingat dari sekolah bahwa tagihan SPP bulan *${t.bulan.join(' & ')}* total *Rp${t.nominal.toLocaleString('id-ID')}* belum diselesaikan.\n\nMohon segera melakukan pembayaran. Terima kasih.`;
-    window.open(`https://wa.me/${t.wa}?text=${encodeURIComponent(teks)}`, '_blank');
+    const target = daftarAntrean[indeksSaatIni];
+    const daftarBulan = target.bulan.join(' & ');
+    
+    const teksPesan = `Halo Bapak/Ibu Wali Murid dari *${target.nama}*,\n\nIni pengingat dari sekolah bahwa tagihan SPP bulan *${daftarBulan}* total *Rp${target.nominal.toLocaleString('id-ID')}* belum diselesaikan.\n\nMohon segera melakukan pembayaran. Terima kasih.`;
+    
+    window.open(`https://wa.me/${target.wa}?text=${encodeURIComponent(teksPesan)}`, '_blank');
     indeksSaatIni++;
     updateLayarAntrean();
 }
 
-function batalAntrean() { document.getElementById('antrean-panel').style.display = 'none'; daftarAntrean = []; }
+function batalAntrean() { 
+    document.getElementById('antrean-panel').style.display = 'none'; 
+    daftarAntrean = []; 
+}
 
 // ==========================================
-// 5. MODUL SISWA & BULK ADD
+// 6. MODUL SISWA & BULK ADD
 // ==========================================
 async function muatDataSiswa() {
     const { data, error } = await db.from('siswa').select('*').order('kode_kelas').order('nama');
@@ -291,7 +318,9 @@ function bukaFormEdit(id, nis, nama, kelas, wa) {
     document.getElementById('form-edit-container').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-function tutupFormEdit() { document.getElementById('form-edit-container').style.display = 'none'; }
+function tutupFormEdit() { 
+    document.getElementById('form-edit-container').style.display = 'none'; 
+}
 
 async function simpanPerubahanSiswa() {
     const id = document.getElementById('edit-id-siswa').value;
@@ -304,11 +333,15 @@ async function simpanPerubahanSiswa() {
 
     const { error } = await db.from('siswa').update(updateData).eq('id', id);
     if (error) alert("Error update: " + error.message);
-    else { alert("Berhasil diperbarui!"); tutupFormEdit(); muatDataSiswa(); }
+    else { 
+        alert("Berhasil diperbarui!"); 
+        tutupFormEdit(); 
+        muatDataSiswa(); 
+    }
 }
 
 async function hapusSiswa(id) {
-    if (!confirm("Hapus siswa ini? Riwayat tagihannya juga akan terhapus otomatis.")) return;
+    if (!confirm("Yakin ingin menghapus siswa ini? Seluruh riwayat tagihannya juga akan ikut terhapus!")) return;
     const { error } = await db.from('siswa').delete().eq('id', id);
     if (error) alert("Gagal hapus: " + error.message);
     else muatDataSiswa();
@@ -316,26 +349,50 @@ async function hapusSiswa(id) {
 
 function downloadFormatCSV() {
     const csv = "data:text/csv;charset=utf-8,nis,nama,kode_kelas,no_wa_ortu,nominal_spp\n2026001,Budi Santoso,5-A,6281234567890,150000\n";
-    const link = document.createElement("a"); link.href = encodeURI(csv); link.download = "Format_Siswa.csv";
-    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    const link = document.createElement("a"); 
+    link.href = encodeURI(csv); 
+    link.download = "Format_Import_Siswa_SPP.csv";
+    document.body.appendChild(link); 
+    link.click(); 
+    document.body.removeChild(link);
 }
 
 function uploadCSV(event) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
+    
     reader.onload = async (e) => {
-        const baris = e.target.result.split("\n");
-        const dataBaru = [];
+        const text = e.target.result;
+        const baris = text.split("\n");
+        const dataSiswaBaru = [];
+        
         for (let i = 1; i < baris.length; i++) {
             if (baris[i].trim() === "") continue;
-            const k = baris[i].split(",");
-            if (k.length >= 5) dataBaru.push({ nis: k[0].trim(), nama: k[1].trim(), kode_kelas: k[2].trim(), no_wa_ortu: k[3].trim(), nominal_spp: Number(k[4].trim()) });
+            const kolom = baris[i].split(",");
+            if (kolom.length >= 5) {
+                dataSiswaBaru.push({ 
+                    nis: kolom[0].trim(), 
+                    nama: kolom[1].trim(), 
+                    kode_kelas: kolom[2].trim(), 
+                    no_wa_ortu: kolom[3].trim(), 
+                    nominal_spp: Number(kolom[4].trim()) 
+                });
+            }
         }
-        if (dataBaru.length > 0 && confirm(`Simpan ${dataBaru.length} data siswa?`)) {
-            const { error } = await db.from('siswa').insert(dataBaru);
-            if (error) alert("Gagal import: " + error.message);
-            else { alert("Import sukses!"); muatDataSiswa(); }
+        
+        if (dataSiswaBaru.length > 0) {
+            if (confirm(`Terbaca ${dataSiswaBaru.length} data siswa dari file. Lanjutkan simpan ke database?`)) {
+                const { error } = await db.from('siswa').insert(dataSiswaBaru);
+                if (error) {
+                    alert("Gagal mengimpor data: " + error.message);
+                } else {
+                    alert("Berhasil mengimpor seluruh data siswa!");
+                    muatDataSiswa(); // Refresh tabel
+                }
+            }
+        } else {
+            alert("Tidak ada data yang valid untuk diimpor. Pastikan format CSV dipisahkan koma.");
         }
         event.target.value = '';
     };
@@ -343,7 +400,7 @@ function uploadCSV(event) {
 }
 
 // ==========================================
-// 6. MODUL GURU & FILTER
+// 7. MODUL GURU & FILTER DATA
 // ==========================================
 async function muatDataGuru() {
     const { data, error } = await db.from('profiles').select('*').order('nama');
@@ -370,19 +427,9 @@ async function muatDataGuru() {
 }
 
 function filterTabelTagihan() {
-    const k = document.getElementById('cari-tagihan').value.toLowerCase();
-    const kl = document.getElementById('filter-kelas-tagihan').value;
-    document.querySelectorAll('#tabel-tunggakan tr').forEach(r => {
-        if(r.cells.length < 3) return;
-        const n = r.cells[1].innerText.toLowerCase(), c = r.cells[2].innerText;
-        r.style.display = (n.includes(k) && (kl === "" || c === kl)) ? "" : "none";
-    });
-}
-
-function filterTabelSiswa() {
-    const k = document.getElementById('cari-siswa').value.toLowerCase();
-    document.querySelectorAll('#tabel-data-siswa tr').forEach(r => {
-        if(r.cells.length < 3) return;
-        r.style.display = (r.cells[1].innerText.toLowerCase().includes(k) || r.cells[2].innerText.toLowerCase().includes(k)) ? "" : "none";
-    });
-}
+    const keyword = document.getElementById('cari-tagihan').value.toLowerCase();
+    const kelasPilihan = document.getElementById('filter-kelas-tagihan').value;
+    const rows = document.querySelectorAll('#tabel-tunggakan tr');
+    
+    rows.forEach(row => {
+        if (row.cells.length < 3) return;
