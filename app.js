@@ -141,7 +141,8 @@ async function muatDaftarSiswaGuru() {
 // ==========================================
 async function muatDataTagihan(statusTarget = 'BELUM_BAYAR') {
     const { data, error } = await db.from('tagihan_spp')
-        .select(`id, bulan_tagihan, nominal, status, siswa ( nama, kode_kelas, no_wa_ortu )`)
+        // Menambahkan tanggal_bayar pada data yang ditarik
+        .select(`id, bulan_tagihan, nominal, status, tanggal_bayar, siswa ( nama, kode_kelas, no_wa_ortu )`)
         .eq('status', statusTarget)
         .order('bulan_tagihan', { ascending: false });
 
@@ -161,6 +162,13 @@ async function muatDataTagihan(statusTarget = 'BELUM_BAYAR') {
                 : `<input type="checkbox" disabled>`;
             
             let warnaBadge = statusTarget === 'LUNAS' ? '#10b981' : '#f59e0b';
+            
+            // Logika format Tanggal Bayar
+            let formatTanggal = '-';
+            if (row.tanggal_bayar) {
+                const dateObj = new Date(row.tanggal_bayar);
+                formatTanggal = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            }
 
             tbody.innerHTML += `
                 <tr>
@@ -169,7 +177,7 @@ async function muatDataTagihan(statusTarget = 'BELUM_BAYAR') {
                     <td><span class="badge-role" style="background:#e2e8f0; color:#475569;">${row.siswa.kode_kelas}</span></td>
                     <td>${row.bulan_tagihan}</td>
                     <td style="font-weight: 500;">Rp${row.nominal.toLocaleString('id-ID')}</td>
-                    <td><span style="background-color: ${warnaBadge}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">${statusTarget}</span></td>
+                    <td><span style="color: #64748b; font-size: 13px;">${formatTanggal}</span></td> <td><span style="background-color: ${warnaBadge}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">${statusTarget}</span></td>
                     <td>${tombolAksi}</td>
                 </tr>
             `;
@@ -293,7 +301,7 @@ async function muatDataSiswa() {
                 <td><span class="badge-role" style="background:#e2e8f0; color:#475569;">${s.kode_kelas}</span></td>
                 <td>${s.no_wa_ortu}</td>
                 <td>
-                    <button onclick="bukaFormEdit('${s.id}', '${s.nis}', '${s.nama}', '${s.kode_kelas}', '${s.no_wa_ortu}')" class="btn-primary" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;">Edit</button>
+                    <button onclick="bukaFormEdit('${s.id}', '${s.nis}', '${s.nama}', '${s.kode_kelas}', '${s.no_wa_ortu}', '${s.nominal_spp || 150000}')" class="btn-primary" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;">Edit</button>
                     <button onclick="hapusSiswa('${s.id}')" class="btn-merah" style="padding: 5px 10px; font-size: 12px;">Hapus</button>
                 </td>
             </tr>
@@ -301,27 +309,35 @@ async function muatDataSiswa() {
     });
 }
 
-function bukaFormEdit(id, nis, nama, kelas, wa) {
+function bukaFormEdit(id, nis, nama, kelas, wa, nominal) {
     document.getElementById('edit-id-siswa').value = id;
     document.getElementById('edit-nis').value = nis;
     document.getElementById('edit-nama').value = nama;
     document.getElementById('edit-kelas').value = kelas;
     document.getElementById('edit-wa').value = wa;
+    document.getElementById('edit-nominal').value = nominal; // Mengisi kolom input nominal
     document.getElementById('form-edit-container').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 function tutupFormEdit() { 
     document.getElementById('form-edit-container').style.display = 'none'; 
 }
 
 async function simpanPerubahanSiswa() {
     const id = document.getElementById('edit-id-siswa').value;
+    const nominalBaru = document.getElementById('edit-nominal').value; // Mengambil data nominal
+
     const updateData = { 
         nama: document.getElementById('edit-nama').value, 
         kode_kelas: document.getElementById('edit-kelas').value, 
-        no_wa_ortu: document.getElementById('edit-wa').value 
+        no_wa_ortu: document.getElementById('edit-wa').value,
+        nominal_spp: nominalBaru ? Number(nominalBaru) : 150000 // Memastikan disimpan sebagai angka
     };
-    if (!updateData.nama || !updateData.kode_kelas || !updateData.no_wa_ortu) return alert("Semua kolom wajib diisi!");
+    
+    if (!updateData.nama || !updateData.kode_kelas || !updateData.no_wa_ortu) {
+        return alert("Semua kolom (kecuali nominal jika dikosongkan) wajib diisi!");
+    }
 
     const { error } = await db.from('siswa').update(updateData).eq('id', id);
     if (error) alert("Error update: " + error.message);
