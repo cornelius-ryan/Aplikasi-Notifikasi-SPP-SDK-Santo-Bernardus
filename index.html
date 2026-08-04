@@ -58,6 +58,20 @@
 
             <!-- HALAMAN 2: DATA TAGIHAN (KHUSUS ADMIN) -->
             <div id="page-tagihan" class="halaman">
+                <!-- PANEL GENERATOR TAGIHAN BULANAN -->
+                <div style="background-color: #eff6ff; padding: 20px; border-radius: 8px; border: 1px solid #bfdbfe; margin-bottom: 25px;">
+                    <h4 style="margin-top: 0; color: #1e40af;">⚙️ Generator Tagihan Bulanan (Massal)</h4>
+                    <p style="font-size: 14px; color: #3b82f6; margin-bottom: 15px;">Pilih bulan dan tahun, lalu sistem akan otomatis membuatkan tagihan untuk seluruh siswa.</p>
+                    
+                    <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                        <div>
+                            <label style="display: block; font-size: 13px; font-weight: bold; color: #1e3a8a; margin-bottom: 5px;">Pilih Bulan & Tahun:</label>
+                            <!-- Menggunakan input type="month" agar otomatis menjadi pemilih bulan/tahun yang rapi -->
+                            <input type="month" id="input-bulan-tagihan" value="2026-08" style="padding: 8px; border: 1px solid #93c5fd; border-radius: 6px; width: 180px;">
+                        </div>
+                        <button onclick="generateTagihanMassal()" style="background-color: #2563eb; color: white; width: auto; padding: 9px 20px; font-size: 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold;">⚡ Generate Tagihan Massal</button>
+                    </div>
+                </div>
                 <h2 style="margin-top: 0;">Kelola Data Tagihan SPP</h2>
                 <hr style="border: 0; height: 1px; background: #e2e8f0; margin: 20px 0;">
                 
