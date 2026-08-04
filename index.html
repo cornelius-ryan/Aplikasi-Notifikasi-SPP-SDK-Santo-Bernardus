@@ -34,6 +34,7 @@
             <button id="btn-menu-home" class="menu-btn menu-aktif" onclick="bukaMenu('page-home')">🏠 Dashboard</button>
             <button id="btn-menu-tagihan" class="menu-btn" onclick="bukaMenu('page-tagihan')" style="display: none;">💰 Data Tagihan</button>
             <button id="btn-menu-siswa" class="menu-btn" onclick="bukaMenu('page-siswa')" style="display: none;">🎓 Data Siswa</button>
+            <button id="btn-menu-guru" class="menu-btn" onclick="bukaMenu('page-guru')" style="display: none;">👩‍🏫 Data Guru</button>
             
             <div class="spacer"></div> <!-- Pendorong tombol logout ke bawah -->
 
@@ -210,6 +211,33 @@
                     </table>
                 </div>
             </div> <!-- Akhir dari div page-siswa -->
+
+            <!-- HALAMAN 4: DATA GURU / WALI KELAS (KHUSUS ADMIN) -->
+            <div id="page-guru" class="halaman">
+                <h2 style="margin-top: 0;">Manajemen Data Guru & Wali Kelas</h2>
+                <hr style="border: 0; height: 1px; background: #e2e8f0; margin: 20px 0;">
+                
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">Daftar guru atau wali kelas yang terdaftar beserta kelas yang diampu.</p>
+                
+                <!-- Tabel Menampilkan Daftar Guru -->
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 50px; text-align: center;">No</th>
+                                <th>Nama Lengkap</th>
+                                <th>Email Akun</th>
+                                <th>Role / Hak Akses</th>
+                                <th style="width: 80px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel-data-guru">
+                            <!-- Data guru akan dimuat di sini oleh Javascript -->
+                            <tr><td colspan="5" style="text-align:center; color:#64748b;">Memuat data guru...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div> <!-- Akhir dari div page-guru -->
 
         </div> <!-- Akhir dari content-area -->
     </div> <!-- Akhir dari dashboard-wrapper -->
