@@ -325,22 +325,25 @@ async function muatDataSiswa() {
         return;
     }
 
-    if (data && data.length > 0) {
-        data.forEach((s, index) => {
-            tbody.innerHTML += `
-                <tr>
-                    <td style="text-align: center;">${index + 1}</td>
-                    <td>${s.nis}</td>
-                    <td>${s.nama}</td>
-                    <td>${s.kode_kelas}</td>
-                    <td>${s.no_wa_ortu}</td>
-                    <td>
-                        <button onclick="hapusSiswa('${s.id}')" style="background-color: #ef4444; color: white; padding: 6px 10px; font-size: 12px; margin: 0; border-radius: 4px; border: none;">Hapus</button>
-                    </td>
-                </tr>
-            `;
-        });
-    } else {
+if (data && data.length > 0) {
+        data.forEach((s, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td style="text-align: center; color: #64748b;">${index + 1}</td>
+                    <td style="font-weight: 500;">${s.nis}</td>
+                    <td>${s.nama}</td>
+                    <td><span style="background-color: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">${s.kode_kelas}</span></td>
+                    <td>${s.no_wa_ortu}</td>
+                    <td>
+                        <div style="display: flex; gap: 5px;">
+                            <button onclick="bukaFormEdit('${s.id}', '${s.nis}', '${s.nama}', '${s.kode_kelas}', '${s.no_wa_ortu}')" style="background-color: #3b82f6; color: white; padding: 5px 10px; font-size: 12px; border-radius: 4px; border: none; cursor: pointer;">Edit</button>
+                            <button onclick="hapusSiswa('${s.id}')" style="background-color: #ef4444; color: white; padding: 5px 10px; font-size: 12px; border-radius: 4px; border: none; cursor: pointer;">Hapus</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    } else {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#64748b;">Belum ada data siswa. Silakan unggah CSV.</td></tr>`;
     }
 }
@@ -447,4 +450,55 @@ function filterTabelSiswa() {
             row.style.display = "none";
         }
     });
+}
+
+// ==========================================
+// FUNGSI EDIT & MUTASI DATA SISWA
+// ==========================================
+
+// 1. Memunculkan form edit dan mengisi data awal siswa yang dipilih
+async function bukaFormEdit(id, nis, nama, kelas, wa) {
+    document.getElementById('edit-id-siswa').value = id;
+    document.getElementById('edit-nis').value = nis;
+    document.getElementById('edit-nama').value = nama;
+    document.getElementById('edit-kelas').value = kelas;
+    document.getElementById('edit-wa').value = wa;
+
+    // Tampilkan kotak form edit, lalu gulir layar ke atas agar terlihat
+    document.getElementById('form-edit-container').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 2. Menutup form edit
+function tutupFormEdit() {
+    document.getElementById('form-edit-container').style.display = 'none';
+}
+
+// 3. Menyimpan perubahan data siswa ke Supabase
+async function simpanPerubahanSiswa() {
+    const id = document.getElementById('edit-id-siswa').value;
+    const namaBaru = document.getElementById('edit-nama').value;
+    const kelasBaru = document.getElementById('edit-kelas').value;
+    const waBaru = document.getElementById('edit-wa').value;
+
+    if (!namaBaru || !kelasBaru || !waBaru) {
+        alert("Semua kolom wajib diisi!");
+        return;
+    }
+
+    const { error } = await db.from('siswa')
+        .update({ 
+            nama: namaBaru, 
+            kode_kelas: kelasBaru, 
+            no_wa_ortu: waBaru 
+        })
+        .eq('id', id);
+
+    if (error) {
+        alert("Gagal memperbarui data: " + error.message);
+    } else {
+        alert("Data siswa berhasil diperbarui!");
+        tutupFormEdit();
+        muatDataSiswa(); // Muat ulang tabel siswa agar data terbaru langsung tampil
+    }
 }
