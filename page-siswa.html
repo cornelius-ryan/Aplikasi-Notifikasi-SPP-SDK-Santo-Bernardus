@@ -1,0 +1,65 @@
+<section id="page-siswa" class="halaman aktif">
+    <h2>Manajemen Data Siswa</h2>
+    <hr class="divider">
+    
+    <div class="panel-dashed">
+        <h4 style="margin-top: 0; color: #334155;">Tambah Siswa Massal (Import CSV)</h4>
+        <p style="font-size: 14px; color: #64748b; margin-bottom: 15px;">Unduh template, isi di Excel, lalu unggah format CSV ke sini.</p>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="downloadFormatCSV()" class="btn-primary">⬇️ Unduh Template</button>
+            <input type="file" id="file-csv" accept=".csv" style="display: none;" onchange="uploadCSV(event)">
+            <button onclick="document.getElementById('file-csv').click()" class="btn-hijau">⬆️ Unggah CSV</button>
+        </div>
+    </div>
+
+    <div id="form-edit-container" class="modal-form-edit">
+        <h4 id="judul-form-edit" style="margin-top: 0; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">✏️ Edit Data / Mutasi Siswa</h4>
+        <input type="hidden" id="edit-id-siswa">
+        
+        <div class="grid-form">
+            <div>
+                <label>NIS:</label>
+                <input type="text" id="edit-nis" disabled class="input-disabled">
+            </div>
+            <div>
+                <label>Nama Lengkap:</label>
+                <input type="text" id="edit-nama" class="input-modern">
+            </div>
+            <div>
+                <label>Kelas:</label>
+                <input type="text" id="edit-kelas" placeholder="Contoh: 5-A" class="input-modern">
+            </div>
+            <div>
+                <label>Nomor WA Orang Tua:</label>
+                <input type="text" id="edit-wa" placeholder="Contoh: 628123456789" class="input-modern">
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button onclick="simpanPerubahanSiswa()" class="btn-primary">💾 Simpan Perubahan</button>
+            <button onclick="tutupFormEdit()" class="btn-abu">Batal</button>
+        </div>
+    </div>
+    
+    <div class="filter-bar">
+        <input type="text" id="cari-siswa" placeholder="🔍 Cari nama atau NIS siswa..." onkeyup="filterTabelSiswa()" class="input-modern" style="width: 100%; max-width: 350px;">
+    </div>
+    
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th class="col-center">No</th>
+                    <th>NIS</th>
+                    <th>Nama Lengkap</th>
+                    <th>Kelas</th>
+                    <th>Nomor WA</th>
+                    <th style="width: 130px;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tabel-data-siswa">
+                <tr><td colspan="6" style="text-align:center; color:#64748b;">Memuat data...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
